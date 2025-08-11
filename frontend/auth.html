@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đăng nhập & Đăng ký - Face Recognition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+      min-height: 100vh;
+    }
+    .tab-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 6px 6px 0 0;
+      border: 2px solid transparent;
+      background: linear-gradient(135deg, transparent 0%, rgba(99,102,241,0.05) 100%);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn:hover {
+      background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(99,102,241,0.15) 100%);
+      color: #4f46e5;
+      box-shadow: 0 8px 25px rgba(99,102,241,0.08);
+      border-color: rgba(99,102,241,0.2);
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      color: #3730a3;
+      border-bottom: 2px solid #4f46e5;
+      box-shadow: 0 4px 15px rgba(99,102,241,0.12);
+    }
+    .form-container {
+      position: relative;
+      min-height: 330px;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: none;
+    }
+    .form-wrapper {
+      position: absolute;
+      width: 100%;
+      max-width: 400px;
+      transition: opacity 0.3s cubic-bezier(0.4,0,0.2,1), transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98) translateY(20px);
+    }
+    .form-wrapper.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1) translateY(0);
+      animation: pageSlideIn 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    @keyframes pageSlideIn {
+      from { opacity: 0; transform: scale(0.98) translateY(30px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    input[type="text"], input[type="password"] {
+      border: 1.5px solid #e5e7eb;
+      box-shadow: none;
+      transition: border-color 0.2s;
+      background: #f8fafc;
+      border-radius: 6px;
+    }
+    input[type="text"]:focus, input[type="password"]:focus {
+      border-width: 2px;
+      border-color: #6366f1;
+      background: #fff;
+      box-shadow: 0 0 0 2px #6366f133;
+    }
+    .form-container button, .form-container input[type="submit"] {
+      transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.08);
+      font-weight: 600;
+      position: relative;
+      overflow: hidden;
+    }
+    .form-container button:active {
+      transform: scale(0.97);
+      box-shadow: 0 1px 4px rgba(99,102,241,0.15);
+    }
+    .form-container button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .shadow-md {
+      box-shadow: 0 8px 32px rgba(99,102,241,0.08), 0 1.5px 8px rgba(0,0,0,0.04);
+    }
+    .ring-1 {
+      box-shadow: 0 0 0 1.5px #6366f133;
+    }
+    .snackbar {
+      position: fixed;
+      left: 50%;
+      bottom: 32px;
+      transform: translateX(-50%);
+      min-width: 240px;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 8px 32px rgba(99,102,241,0.12);
+      padding: 16px 24px;
+      font-size: 1rem;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .snackbar.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .snackbar.success { color: #16a34a; border-left: 4px solid #16a34a; }
+    .snackbar.error { color: #dc2626; border-left: 4px solid #dc2626; }
+    .snackbar.info { color: #6366f1; border-left: 4px solid #6366f1; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+        <i class="fa-solid fa-robot text-5xl text-indigo-600 animate-bounce"></i>
+        <h1 class="text-3xl font-bold text-gray-800 mt-4">Face Recognition</h1>
+        <p class="text-gray-600">Đăng nhập hoặc tạo tài khoản để tiếp tục</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md ring-1 ring-gray-900/5">
+        <div class="flex border-b border-gray-200">
+            <button id="loginTab" class="tab-btn flex-1 py-4 text-center font-semibold text-indigo-600 border-b-2 border-indigo-600 transition-colors active">Đăng nhập</button>
+            <button id="registerTab" class="tab-btn flex-1 py-4 text-center font-semibold text-gray-500 transition-colors">Đăng ký</button>
+        </div>
+        <div class="p-8 form-container">
+            <div id="loginForm" class="form-wrapper active space-y-6">
+              <input type="text" id="loginUsername" class="w-full px-4 py-3 text-base" placeholder="Tên đăng nhập" autocomplete="username" />
+              <input type="password" id="loginPassword" class="w-full px-4 py-3 text-base" placeholder="Mật khẩu" autocomplete="current-password" />
+              <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 font-semibold text-base flex items-center justify-center gap-2"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</button>
+              <div id="loginResult" class="text-sm text-red-600 text-center h-5"></div>
+            </div>
+            <div id="registerForm" class="form-wrapper space-y-6">
+              <form id="registerFormInner" class="space-y-6">
+                <input type="text" id="registerUsername" class="w-full px-4 py-3 text-base" placeholder="Tên đăng nhập" autocomplete="username" />
+                <input type="password" id="registerPassword" class="w-full px-4 py-3 text-base" placeholder="Mật khẩu" autocomplete="new-password" />
+                <input type="password" id="registerPassword2" class="w-full px-4 py-3 text-base" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
+                <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 font-semibold text-base flex items-center justify-center gap-2"><i class="fa-solid fa-user-plus"></i> Đăng ký</button>
+                <div id="registerResult" class="text-sm text-red-600 text-center h-5"></div>
+              </form>
+            </div>
+        </div>
+    </div>
+    <div class="pt-6 text-center">
+      <button onclick="window.location.href='index.html'" class="px-6 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-sm flex items-center gap-2 mx-auto"><i class="fa-solid fa-arrow-left"></i> Quay lại trang chủ</button>
+    </div>
+  </div>
+  <script>
+    const loginTab = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const loginBtn = loginForm.querySelector('button');
+    const loginResult = document.getElementById('loginResult');
+    const registerBtn = registerForm.querySelector('button');
+    const registerResult = document.getElementById('registerResult');
+
+    function switchTab(isLogin) {
+        if (isLogin) {
+            loginTab.classList.add('active', 'text-indigo-600', 'border-indigo-600');
+            loginTab.classList.remove('text-gray-500');
+            registerTab.classList.remove('active', 'text-indigo-600', 'border-indigo-600');
+            registerTab.classList.add('text-gray-500');
+            loginForm.classList.add('active');
+            registerForm.classList.remove('active');
+        } else {
+            registerTab.classList.add('active', 'text-indigo-600', 'border-indigo-600');
+            registerTab.classList.remove('text-gray-500');
+            loginTab.classList.remove('active', 'text-indigo-600', 'border-indigo-600');
+            loginTab.classList.add('text-gray-500');
+            registerForm.classList.add('active');
+            loginForm.classList.remove('active');
+        }
+    }
+
+    loginTab.onclick = () => switchTab(true);
+    registerTab.onclick = () => switchTab(false);
+
+    function showSnackbar(message, type = 'info', duration = 2500) {
+      let snackbar = document.getElementById('snackbar');
+      if (!snackbar) {
+        snackbar = document.createElement('div');
+        snackbar.id = 'snackbar';
+        document.body.appendChild(snackbar);
+      }
+      const icons = {
+        success: '<i class="fa-solid fa-circle-check"></i>',
+        error: '<i class="fa-solid fa-circle-exclamation"></i>',
+        info: '<i class="fa-solid fa-info-circle"></i>'
+      };
+      snackbar.innerHTML = `<span>${icons[type] || icons.info}</span> <span>${message}</span>`;
+      snackbar.className = `snackbar ${type} show`;
+      setTimeout(() => { snackbar.classList.remove('show'); }, duration);
+    }
+    window.showSnackbar = showSnackbar;
+
+    loginBtn.onclick = async function() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      loginResult.textContent = '';
+      if (!username || !password) {
+        showSnackbar('Vui lòng nhập đầy đủ thông tin.', 'error');
+        loginResult.textContent = 'Vui lòng nhập đầy đủ thông tin.';
+        return;
+      }
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng nhập...';
+      try {
+        let apiHost = '';
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          apiHost = window.location.origin;
+        } else {
+          apiHost = 'http://127.0.0.1:8000';
+        }
+        const res = await fetch(apiHost + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username, passwrd: password })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          showSnackbar('Đăng nhập thành công!', 'success');
+          sessionStorage.setItem('username', username);
+          sessionStorage.setItem('isLoggedIn', 'true');
+          window.location.href = 'index.html';
+        } else {
+          showSnackbar(data.message || 'Đăng nhập thất bại.', 'error');
+          loginResult.textContent = data.message || 'Đăng nhập thất bại.';
+        }
+      } catch (err) {
+        showSnackbar('Lỗi kết nối máy chủ.', 'error');
+        loginResult.textContent = 'Lỗi kết nối máy chủ.';
+      }
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập';
+    };
+
+    registerBtn.onclick = async function() {
+      const username = document.getElementById('registerUsername').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      const password2 = document.getElementById('registerPassword2').value;
+      registerResult.textContent = '';
+      if (!username || !password || !password2) {
+        showSnackbar('Vui lòng nhập đầy đủ thông tin.', 'error');
+        registerResult.textContent = 'Vui lòng nhập đầy đủ thông tin.';
+        return;
+      }
+      if (password !== password2) {
+        showSnackbar('Mật khẩu nhập lại không khớp.', 'error');
+        registerResult.textContent = 'Mật khẩu nhập lại không khớp.';
+        return;
+      }
+      registerBtn.disabled = true;
+      registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng ký...';
+      try {
+        let apiHost = '';
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          apiHost = window.location.origin;
+        } else {
+          apiHost = 'http://127.0.0.1:8000';
+        }
+        const res = await fetch(apiHost + '/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: username, passwrd: password })
+        });
+        let data;
+        try {
+          data = await res.json();
+        } catch (jsonErr) {
+          showSnackbar('Phản hồi máy chủ không hợp lệ.', 'error');
+          registerResult.textContent = 'Phản hồi máy chủ không hợp lệ.';
+          registerBtn.disabled = false;
+          registerBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Đăng ký';
+          return;
+        }
+        if (res.ok && data.success) {
+          showSnackbar('Đăng ký thành công!', 'success');
+          sessionStorage.setItem('username', username);
+          sessionStorage.setItem('isLoggedIn', 'true');
+          document.getElementById('registerFormInner').reset();
+          window.location.href = 'index.html';
+        } else {
+          showSnackbar(data.message || 'Đăng ký thất bại.', 'error');
+          registerResult.textContent = data.message || 'Đăng ký thất bại.';
+        }
+      } catch (err) {
+        showSnackbar('Lỗi kết nối máy chủ.', 'error');
+        registerResult.textContent = 'Lỗi kết nối máy chủ.';
+      }
+      registerBtn.disabled = false;
+      registerBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Đăng ký';
+    };
+  </script>
+</body>
+</html>
