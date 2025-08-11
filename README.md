@@ -2,7 +2,9 @@
 
 ## 📖 Tổng quan
 
-Hệ thống Face Recognition API là một ứng dụng nhận diện khuôn mặt hoàn chỉnh được xây dựng bằng Python, sử dụng FastAPI làm backend framework. Hệ thống kết hợp mô hình ArcFace để trích xuất đặc trưng khuôn mặt, FAISS để tìm kiếm vector tương tự, và MySQL để lưu trữ thông tin người dùng.
+Hệ thống Face Recognition API là một ứng dụng nhận diện khuôn mặt hoàn chỉnh được xây dựng bằng Python, sử dụng FastAPI làm backend framework. Hệ thống kết hợp **thư viện InsightFace** (từ thư mục `insightface/`) với mô hình ArcFace để trích xuất đặc trưng khuôn mặt, FAISS để tìm kiếm vector tương tự, và MySQL để lưu trữ thông tin người dùng.
+
+**Đặc biệt**: Dự án này tích hợp trực tiếp source code của **InsightFace** thông qua thư mục `insightface/`, bao gồm các module recognition, detection và các công cụ hỗ trợ khác.
 
 ## 🏗️ Kiến trúc hệ thống
 
@@ -19,7 +21,8 @@ FastAPI Backend (Python)
 - **Backend API**: FastAPI với các endpoint RESTful
 - **Database**: MySQL để lưu thông tin người dùng
 - **Vector Database**: FAISS để tìm kiếm tương tự embedding
-- **AI Model**: ArcFace để trích xuất đặc trưng khuôn mặt
+- **AI Model**: ArcFace (từ thư viện InsightFace) để trích xuất đặc trưng khuôn mặt
+- **InsightFace Library**: Thư viện mã nguồn mở được tích hợp trực tiếp từ thư mục `insightface/`
 
 ## 🚀 Tính năng
 
@@ -87,8 +90,54 @@ face_api/
 │   ├── auth.html       # Trang đăng nhập
 │   └── assets/
 └── 
-└── insightface/         # Thư viện InsightFace
+└── insightface/         # Thư viện InsightFace (source code)
+    ├── recognition/     # Module nhận diện khuôn mặt
+    │   └── arcface_torch/  # Implementation ArcFace với PyTorch
+    ├── detection/       # Module phát hiện khuôn mặt
+    ├── python-package/  # Python package của InsightFace
+    ├── cpp-package/     # C++ implementation
+    ├── model_zoo/       # Model repository
+    ├── examples/        # Ví dụ sử dụng
+    └── tools/          # Công cụ hỗ trợ
 ```
+
+## 🧠 Về thư viện InsightFace
+
+### Tổng quan InsightFace
+Dự án này tích hợp trực tiếp **source code của InsightFace** - một thư viện mã nguồn mở hàng đầu về nhận diện khuôn mặt, được phát triển bởi đội ngũ nghiên cứu tại Imperial College London và các cộng tác viên.
+
+### Cấu trúc thư mục InsightFace trong dự án:
+```
+insightface/
+├── recognition/         # Module nhận diện khuôn mặt chính
+│   └── arcface_torch/  # Implementation ArcFace với PyTorch
+│       ├── backbones/  # Các kiến trúc mạng backbone (ResNet, etc.)
+│       ├── configs/    # File cấu hình training
+│       └── losses/     # Các loss functions
+├── detection/          # Module phát hiện khuôn mặt
+├── python-package/     # Package Python chính thức
+├── cpp-package/        # Implementation C++ cho hiệu suất cao
+├── model_zoo/          # Repository các pre-trained models
+├── examples/           # Ví dụ và demo
+└── tools/             # Công cụ hỗ trợ training và evaluation
+```
+
+### Cách sử dụng trong dự án:
+1. **Import trực tiếp**: Thay vì cài đặt package, dự án import trực tiếp từ source:
+   ```python
+   sys.path.append('path/to/insightface/recognition/arcface_torch')
+   from backbones import get_model
+   ```
+
+2. **Model được sử dụng**: 
+   - **ArcFace R18**: Kiến trúc ResNet-18 với ArcFace loss
+   - **Embedding size**: 512 dimensions
+   - **Model files**: `.pth` format trong thư mục `model/`
+
+3. **Ưu điểm**:
+   - Không phụ thuộc vào package external
+   - Có thể tùy chỉnh source code nếu cần
+   - Đảm bảo tính ổn định và tương thích
 
 ## 🛠️ Cài đặt và Cấu hình
 
@@ -113,6 +162,12 @@ torch
 albumentations
 faiss-cpu
 pymysql
+```
+
+**Lưu ý về InsightFace**: Dự án này sử dụng source code InsightFace được tích hợp sẵn trong thư mục `insightface/`, do đó không cần cài đặt thêm package `insightface` từ PyPI. Module `arcface_model.py` sẽ import trực tiếp từ:
+```python
+sys.path.append('C:/Users/DELL/Downloads/archive/face_api/insightface/recognition/arcface_torch')
+from backbones import get_model
 ```
 
 ### 3. Cấu hình MySQL
@@ -153,7 +208,21 @@ Lệnh này sẽ:
   ```
 - Import dữ liệu mẫu từ `class_info.csv`
 
-### 4. Cấu hình Model
+### 4. Cấu hình Model và InsightFace
+
+#### Thiết lập InsightFace:
+Dự án sử dụng source code InsightFace được tích hợp trong thư mục `insightface/`. Module `model/arcface_model.py` đã được cấu hình để sử dụng:
+
+```python
+# Trong model/arcface_model.py
+sys.path.append('C:/Users/DELL/Downloads/archive/face_api/insightface/recognition/arcface_torch')
+from backbones import get_model
+```
+
+**Điều chỉnh đường dẫn**: Nếu dự án của bạn ở vị trí khác, hãy sửa đường dẫn trong `model/arcface_model.py`:
+```python
+sys.path.append('[ĐỘI_DẪN_DỰ_ÁN]/insightface/recognition/arcface_torch')
+```
 
 #### Tải model ArcFace (nếu chưa có):
 ```bash
@@ -285,7 +354,19 @@ FileNotFoundError: model file not found
 - Kiểm tra đường dẫn trong `config.py`
 - Đảm bảo file model có trong thư mục `model/`
 
-#### 3. Lỗi FAISS index
+#### 3. Lỗi import InsightFace
+```
+ModuleNotFoundError: No module named 'backbones'
+```
+**Giải pháp:**
+- Kiểm tra đường dẫn InsightFace trong `model/arcface_model.py`
+- Đảm bảo thư mục `insightface/` có đầy đủ source code
+- Sửa đường dẫn phù hợp với vị trí dự án:
+```python
+sys.path.append('[ĐỘI_DẪN_DỰ_ÁN]/insightface/recognition/arcface_torch')
+```
+
+#### 4. Lỗi FAISS index
 ```
 RuntimeError: FAISS index not loaded
 ```
@@ -294,7 +375,7 @@ RuntimeError: FAISS index not loaded
 python dump_faiss_vectors.py  # Khởi tạo lại index
 ```
 
-#### 4. Lỗi CORS khi truy cập từ frontend
+#### 5. Lỗi CORS khi truy cập từ frontend
 **Giải pháp:** Đảm bảo CORS được cấu hình đúng trong `app.py`
 
 ### Kiểm tra logs
@@ -306,7 +387,7 @@ python dump_faiss_vectors.py  # Khởi tạo lại index
 ## 📊 Hiệu suất
 
 ### Benchmark
-- **Thời gian nhận diện**: ~0.5-1s per image
+- **Thời gian nhận diện**: ~0.05-0.1s per image
 - **Độ chính xác**: >99% với threshold 0.5
 - **Hỗ trợ**: Lên đến 100,000 embeddings trong database
 
@@ -316,5 +397,19 @@ python dump_faiss_vectors.py  # Khởi tạo lại index
 - Optimize MySQL queries với indexing
 
 ---
+
+## 🙏 Tham khảo và Tài liệu
+
+### InsightFace
+Dự án này sử dụng source code từ **InsightFace**:
+- **GitHub**: https://github.com/deepinsight/insightface
+- **Paper**: "ArcFace: Additive Angular Margin Loss for Deep Face Recognition"
+- **License**: MIT License
+- **Tác giả**: Jiankang Deng, Jia Guo, và các cộng tác viên
+
+### Mô hình ArcFace
+- **Paper gốc**: https://arxiv.org/abs/1801.07698
+- **Kiến trúc**: ResNet backbone với ArcFace loss function
+- **Đặc điểm**: Tối ưu hóa cho face recognition với margin loss
 
 **Lưu ý**: Đây là hệ thống demo cho mục đích học tập và nghiên cứu. Trong môi trường production, cần thêm các biện pháp bảo mật và tối ưu hóa phù hợp.
