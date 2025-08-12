@@ -1,10 +1,10 @@
 // API Host Configuration
 // =================================================================
 let apiHost = '';
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.122') {
   apiHost = window.location.origin;
 } else {
-  apiHost = 'http://127.0.0.1:8000';
+  apiHost = 'http://172.16.8.122:8000';
 }
 
 // =================================================================
@@ -160,7 +160,7 @@ function callQuery() {
   }
   
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('image', file);
   
   // Show global loading for query operations
   if (window.showGlobalLoading) {

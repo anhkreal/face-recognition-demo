@@ -11,7 +11,37 @@ from service.shared_instances import get_faiss_manager
 
 health_router = APIRouter()
 
-@health_router.get('/health')
+@health_router.get(
+    '/health',
+    summary="Kiểm tra sức khỏe hệ thống",
+    description="""
+    **Kiểm tra trạng thái cơ bản của hệ thống**
+    
+    API này cung cấp:
+    - Trạng thái hoạt động của server
+    - Thời gian phản hồi hệ thống
+    - Tình trạng kết nối cơ bản
+    - Thông tin uptime
+    
+    **Kết quả trả về:**
+    - status: healthy/unhealthy
+    - timestamp: Thời gian kiểm tra
+    - uptime: Thời gian hoạt động
+    - server_info: Thông tin cơ bản về server
+    
+    **Mục đích sử dụng:**
+    - Monitoring hệ thống
+    - Load balancer health check
+    - Kiểm tra tình trạng trước khi gửi request
+    - Debug kết nối
+    """,
+    response_description="Trạng thái sức khỏe cơ bản của hệ thống",
+    responses={
+        200: {"description": "Hệ thống hoạt động bình thường"},
+        503: {"description": "Hệ thống gặp sự cố"}
+    },
+    tags=["🏥 Health Check"]
+)
 def health_check():
     """Basic health check endpoint"""
     health_status = get_server_health()
@@ -24,7 +54,38 @@ def health_check():
         status_code=status_code
     )
 
-@health_router.get('/health/detailed')
+@health_router.get(
+    '/health/detailed',
+    summary="Kiểm tra sức khỏe chi tiết",
+    description="""
+    **Kiểm tra trạng thái chi tiết và hiệu suất hệ thống**
+    
+    API này cung cấp thông tin toàn diện:
+    - Tất cả thông tin từ health check cơ bản
+    - Metrics hiệu suất chi tiết (CPU, RAM, response time)
+    - Thông tin FAISS index (số vectors, loại index)
+    - Trạng thái các service nội bộ
+    - Statistics về số lượng request đã xử lý
+    
+    **Thông tin chi tiết bao gồm:**
+    - performance_metrics: CPU, memory usage, avg response time
+    - faiss_info: Tổng số vectors, loại index, trạng thái sẵn sàng
+    - request_stats: Số lượng request đã xử lý, tỷ lệ thành công
+    - system_resources: Tình trạng tài nguyên hệ thống
+    
+    **Ứng dụng:**
+    - Monitoring hiệu suất chi tiết
+    - Debugging khi có vấn đề
+    - Capacity planning
+    - Performance optimization
+    """,
+    response_description="Thông tin sức khỏe và hiệu suất chi tiết",
+    responses={
+        200: {"description": "Thông tin chi tiết hệ thống"},
+        503: {"description": "Hệ thống gặp sự cố với thông tin chi tiết"}
+    },
+    tags=["🏥 Health Check"]
+)
 def detailed_health_check():
     """Detailed health check với performance metrics"""
     health_status = get_server_health()
