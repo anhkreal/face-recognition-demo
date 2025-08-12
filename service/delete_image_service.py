@@ -1,27 +1,29 @@
 from fastapi import APIRouter, Form, Depends
 from fastapi.responses import JSONResponse
 
-from index.faiss import FaissIndexManager
-from config import *
+from service.shared_instances import get_faiss_manager, get_faiss_lock
+from service.performance_monitor import track_operation
 from db.nguoi_repository import NguoiRepository
 from Depend.depend import DeleteImageInput
 
 delete_image_router = APIRouter()
 
-faiss_manager = FaissIndexManager(embedding_size=512, index_path=FAISS_INDEX_PATH, meta_path=FAISS_META_PATH)
-faiss_manager.load()
+# ✅ Sử dụng shared instances
+faiss_manager = get_faiss_manager()
+faiss_lock = get_faiss_lock()
 nguoi_repo = NguoiRepository()
 
+@track_operation("delete_image")
 def delete_image_service(
     # image_id: int = Form(...)
     input: DeleteImageInput = Depends(DeleteImageInput.as_form)
     ):
-    # Kiểm tra kết nối FAISS
-    try:
-        faiss_manager.load()
-        _ = faiss_manager.image_ids
-    except Exception as e:
-        return {"message": f"Không thể kết nối FAISS: {e}", "status_code": 500}
+    # ✅ Kiểm tra kết nối FAISS - không load lại
+    with faiss_lock:
+        try:
+            _ = faiss_manager.image_ids
+        except Exception as e:
+            return {"message": f"Không thể kết nối FAISS: {e}", "status_code": 500}
     # Kiểm tra kết nối MySQL
     try:
         _ = nguoi_repo
@@ -35,9 +37,13 @@ def delete_image_service(
         class_id = None
         if idxs:
             class_id = int(faiss_manager.class_ids[idxs[0]])
-        result = faiss_manager.delete_by_image_id(input.image_id)
-        faiss_manager.save()
-        faiss_manager.load()
+        
+        # ✅ Thread-safe delete operation
+        with faiss_lock:
+            result = faiss_manager.delete_by_image_id(input.image_id)
+            if result:
+                faiss_manager.save()
+        
         if result:
             # Kiểm tra còn ảnh nào thuộc class_id không
             if class_id is not None:

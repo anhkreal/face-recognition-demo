@@ -2,18 +2,17 @@ from fastapi import APIRouter, File, UploadFile, Form, Depends
 from fastapi.responses import JSONResponse
 import numpy as np
 import cv2
-from index.faiss import FaissIndexManager
-from config import *
-from model.arcface_model import ArcFaceFeatureExtractor
+from service.shared_instances import get_extractor, get_faiss_manager, get_faiss_lock
 from db.nguoi_repository import NguoiRepository
 from db.models import Nguoi
 from Depend.depend import AddEmbeddingInput
+
 add_router = APIRouter() 
 
-extractor = ArcFaceFeatureExtractor(model_path=MODEL_PATH, device=None)
-
-faiss_manager = FaissIndexManager(embedding_size=512, index_path=FAISS_INDEX_PATH, meta_path=FAISS_META_PATH)
-faiss_manager.load()
+# ✅ Sử dụng shared instances
+extractor = get_extractor()
+faiss_manager = get_faiss_manager()
+faiss_lock = get_faiss_lock()
 nguoi_repo = NguoiRepository()
 
 def add_embedding_service(
@@ -27,12 +26,13 @@ def add_embedding_service(
     input: AddEmbeddingInput = Depends(AddEmbeddingInput.as_form),
     file: UploadFile = File(...)
 ):
-    # Kiểm tra kết nối FAISS
-    try:
-        faiss_manager.load()
-        _ = faiss_manager.image_ids
-    except Exception as e:
-        return {"message": f"Không thể kết nối FAISS: {e}", "status_code": 500}
+    # ✅ Kiểm tra kết nối FAISS - không load lại
+    with faiss_lock:
+        try:
+            _ = faiss_manager.image_ids
+        except Exception as e:
+            return {"message": f"Không thể kết nối FAISS: {e}", "status_code": 500}
+    
     print(f'--- Nhận request thêm embedding image_id={input.image_id}, class_id={input.class_id} ---')
     # Kiểm tra tồn tại image_id hoặc image_path
     if str(input.image_id) in [str(id) for id in faiss_manager.image_ids]:
@@ -58,14 +58,16 @@ def add_embedding_service(
         return {"message": f"Không thể kết nối MySQL: {e}", "status_code": 500}
 
     try:
-        faiss_manager.add_embeddings(
-            np.array([embedding]),
-            [input.image_id],
-            [input.image_path],
-            [input.class_id]
-        )
-        faiss_manager.save()
-        faiss_manager.load()
+        # ✅ Thread-safe FAISS operations
+        with faiss_lock:
+            faiss_manager.add_embeddings(
+                np.array([embedding]),
+                [input.image_id],
+                [input.image_path],
+                [input.class_id]
+            )
+            faiss_manager.save()
+        
         if not nguoi_exist:
             gioitinh_str = "Nam" if input.gioitinh else "Nữ"
             nguoi = Nguoi(class_id=input.class_id, ten=input.ten, tuoi=input.tuoi, gioitinh=gioitinh_str, noio=input.noio)

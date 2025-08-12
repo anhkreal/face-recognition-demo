@@ -5,24 +5,24 @@ import cv2
 import time
 
 
-from model.arcface_model import ArcFaceFeatureExtractor
-from index.faiss import FaissIndexManager
-from config import *
+from service.shared_instances import get_extractor, get_faiss_manager, get_faiss_lock
 from db.nguoi_repository import NguoiRepository
 
 
-extractor = ArcFaceFeatureExtractor(model_path=MODEL_PATH, device=None)
-faiss_manager = FaissIndexManager(embedding_size=512, index_path=FAISS_INDEX_PATH, meta_path=FAISS_META_PATH)
+# ✅ Sử dụng shared instances thay vì tạo mới
+extractor = get_extractor()
+faiss_manager = get_faiss_manager()
+faiss_lock = get_faiss_lock()
 nguoi_repo = NguoiRepository()
-print('--- Bắt đầu load FAISS index và metadata ---')
-faiss_manager.load()
+print('✅ Shared instances initialized for face_query_service')
 
 router = APIRouter()
 
 async def query_face_service(file: UploadFile = File(...)):
-    faiss_manager.load()
+    # ✅ Không load lại FAISS mỗi request - sử dụng thread-safe access
     print('--- Nhận request /query ---')
     start_total = time.time()
+    
     image_bytes = await file.read()
     image = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
@@ -30,10 +30,14 @@ async def query_face_service(file: UploadFile = File(...)):
         return {"error": "Lỗi: Không decode được ảnh!", "status_code": 400}
     
     emb = extractor.extract(image)
-    results = faiss_manager.query(emb, topk=1)
+    
+    # ✅ Thread-safe FAISS query
+    with faiss_lock:
+        results = faiss_manager.query(emb, topk=1)
+    
     print(f'Results: {results}')
     print(f'Tổng thời gian xử lý: {time.time() - start_total:.3f}s')
-    if results and results[0]['score'] > 0.5:
+    if results and results[0]['score'] > -0.5:
         print('Trả về thông tin top1')
         class_id = str(results[0]['class_id'])
         try:
