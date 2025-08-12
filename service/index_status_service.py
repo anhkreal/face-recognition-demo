@@ -1,19 +1,22 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from index.faiss import FaissIndexManager
-from config import *
+from service.shared_instances import get_faiss_manager, get_faiss_lock
+from service.performance_monitor import track_operation
 from db.nguoi_repository import NguoiRepository
 
 status_router = APIRouter()
 
-faiss_manager = FaissIndexManager(embedding_size=512, index_path=FAISS_INDEX_PATH, meta_path=FAISS_META_PATH)
-faiss_manager.load()
+# ✅ Sử dụng shared instances
+faiss_manager = get_faiss_manager()
+faiss_lock = get_faiss_lock()
 nguoi_repo = NguoiRepository()
 
+@track_operation("index_status")
 def index_status_service():
-    faiss_manager.load()
-    result = faiss_manager.check_index_data()
+    # ✅ Thread-safe status check - không load lại
+    with faiss_lock:
+        result = faiss_manager.check_index_data()
     # Thêm thông tin bảng nguoi
     # Lấy tổng số người và ví dụ 5 người
     try:

@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+venv/
+ENV/
+
+# Jupyter
+*.ipynb_checkpoints
+
+# FAISS index & metadata
+*.index
+*.npz
+
+# Data & logs
+*.log
+*.csv
+*.txt
+*.zip
+*.pth
+*.dat
+
+# OS
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# Others
+*.bak
+*.swp

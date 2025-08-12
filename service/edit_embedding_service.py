@@ -1,20 +1,25 @@
 import numpy as np
 import cv2
 import faiss
-from index.faiss import FaissIndexManager
-from config import *
-from model.arcface_model import ArcFaceFeatureExtractor
+from service.shared_instances import get_extractor, get_faiss_manager, get_faiss_lock
+from service.performance_monitor import track_operation
 from db.nguoi_repository import NguoiRepository
 from db.models import Nguoi
+from index.faiss import FaissIndexManager
+from config import FAISS_INDEX_PATH, FAISS_META_PATH
 
+@track_operation("edit_embedding")
 def edit_embedding_service(input, file):
-    faiss_manager = FaissIndexManager(embedding_size=512, index_path=FAISS_INDEX_PATH, meta_path=FAISS_META_PATH)
-    faiss_manager.load()
+    # ✅ Sử dụng shared instances
+    faiss_manager = get_faiss_manager()
+    faiss_lock = get_faiss_lock()
+    extractor = get_extractor()
     nguoi_repo = NguoiRepository()
     
-    # Kiểm tra tồn tại image_id
-    if str(input.image_id) not in [str(id) for id in faiss_manager.image_ids]:
-        return {"message": f"image_id {input.image_id} không tồn tại!", "status_code": 404}
+    # ✅ Thread-safe check existence
+    with faiss_lock:
+        if str(input.image_id) not in [str(id) for id in faiss_manager.image_ids]:
+            return {"message": f"image_id {input.image_id} không tồn tại!", "status_code": 404}
     
     try:
         idxs = [i for i, img_id in enumerate(faiss_manager.image_ids) if str(img_id) == str(input.image_id)]
@@ -53,7 +58,7 @@ def edit_embedding_service(input, file):
                 if img is None:
                     return {"message": "Không thể decode ảnh!", "status_code": 400}
                 
-                extractor = ArcFaceFeatureExtractor(model_path=MODEL_PATH, device=None)
+                # ✅ Sử dụng shared extractor
                 new_embedding = extractor.extract(img)
                 
                 # L2 normalization (quan trọng!)

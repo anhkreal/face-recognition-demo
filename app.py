@@ -14,6 +14,7 @@ from api.list_nguoi import list_nguoi_router
 from api.register import register_router
 from api.login import login_router
 from api.search_embeddings import embedding_search_router
+from api.health import health_router
 import os
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
@@ -40,3 +41,4 @@ app.include_router(list_nguoi_router)
 app.include_router(register_router) 
 app.include_router(login_router)
 app.include_router(embedding_search_router)
+app.include_router(health_router)
