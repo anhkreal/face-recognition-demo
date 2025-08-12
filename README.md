@@ -4,13 +4,6 @@
 
 Hệ thống Face Recognition API là một ứng dụng nhận diện khuôn mặt **enterprise-grade** được xây dựng bằng Python, sử dụng FastAPI làm backend framework. Hệ thống kết hợp **thư viện InsightFace** với mô hình ArcFace để trích xuất đặc trưng khuôn mặt, FAISS để tìm kiếm vector tương tự, và MySQL để lưu trữ thông tin người dùng.
 
-**🎯 Đặc biệt**: 
-- **Shared Instances Pattern**: Tối ưu hóa memory và performance
-- **Health Monitoring**: Real-time system health checks
-- **Concurrent Load Testing**: Hỗ trợ 100+ concurrent requests
-- **Performance Analytics**: Chi tiết metrics và monitoring
-- **Production Ready**: Với load balancing và error handling
-
 ## 🏗️ Kiến trúc hệ thống
 
 ```
