@@ -223,10 +223,10 @@
       loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng nhập...';
       try {
         let apiHost = '';
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.122') {
           apiHost = window.location.origin;
         } else {
-          apiHost = 'http://127.0.0.1:8000';
+          apiHost = 'http://172.16.8.122:8000';
         }
         const res = await fetch(apiHost + '/login', {
           method: 'POST',
@@ -270,10 +270,10 @@
       registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng ký...';
       try {
         let apiHost = '';
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.122') {
           apiHost = window.location.origin;
         } else {
-          apiHost = 'http://127.0.0.1:8000';
+          apiHost = 'http://172.16.8.122:8000';
         }
         const res = await fetch(apiHost + '/register', {
           method: 'POST',
