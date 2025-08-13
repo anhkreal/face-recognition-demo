@@ -12,7 +12,6 @@ faiss_lock = get_faiss_lock()
 @track_operation("vector_info")
 def get_vector_info_service():
     # ✅ Thread-safe vector info query - không load lại
-    print('--- Nhận request truy vấn 10 vector đầu và 10 vector cuối ---')
     
     with faiss_lock:
         n = 10

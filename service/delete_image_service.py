@@ -30,7 +30,7 @@ def delete_image_service(
         nguoi_repo.get_total_and_examples(limit=1)
     except Exception as e:
         return {"message": f"Không thể kết nối MySQL: {e}", "status_code": 500}
-    print(f'--- Nhận request xóa embedding image_id={input.image_id} ---')
+    
     try:
         # Lấy class_id trước khi xóa
         idxs = [i for i, img_id in enumerate(faiss_manager.image_ids) if str(img_id) == str(input.image_id)]

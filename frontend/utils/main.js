@@ -1,13 +1,13 @@
 // API Host Configuration
 // =================================================================
 let apiHost = '';
-if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.122') {
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
   apiHost = window.location.origin;
 } else {
-  apiHost = 'http://172.16.8.122:8000';
+  apiHost = 'http://127.0.0.1:8000';
 }
 
-// =================================================================
+// ========  callProtectedApi('add_embedding', { method: 'POST', body: formData }, 'addResult', 'Thêm thành công!', true);========================================================
 // Utility Functions
 // =================================================================
 
@@ -107,7 +107,62 @@ function showApiResult(resultId, data, successMessage = 'Thao tác thành công!
 }
 
 /**
- * A generic function to call an API endpoint.
+ * A generic function to call protected API endpoints (requires authentication).
+ * @param {string} endpoint - The API endpoint to call.
+ * @param {object} options - The options for the fetch call.
+ * @param {string} resultId - The ID of the element to display the result in.
+ * @param {string} successMessage - The message to display on success.
+ * @param {boolean} useGlobalLoading - Whether to show global loading overlay.
+ */
+function callProtectedApi(endpoint, options, resultId, successMessage, useGlobalLoading = false) {
+  if (useGlobalLoading && window.showGlobalLoading) {
+    window.showGlobalLoading();
+  } else {
+    showLoading(resultId, true);
+  }
+  
+  // Add token to headers for authentication
+  const token = sessionStorage.getItem('authToken');
+  
+  if (!token || token === 'undefined' || token === 'null') {
+    alert('Token không hợp lệ! Vui lòng đăng nhập lại.');
+    window.location.href = 'auth.html';
+    return;
+  }
+  
+  const authHeader = `Bearer ${token}`;
+  
+  const fetchOptions = {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      'Authorization': authHeader
+    }
+  };
+  
+  fetch(`${apiHost}/${endpoint}`, fetchOptions)
+    .then(res => {
+      if (!res.ok) {
+        return res.text().then(text => { throw new Error(`HTTP error! status: ${res.status}, message: ${text}`) });
+      }
+      return res.json();
+    })
+    .then(data => {
+      if (useGlobalLoading && window.hideGlobalLoading) {
+        window.hideGlobalLoading();
+      }
+      showApiResult(resultId, data, successMessage);
+    })
+    .catch(err => {
+      if (useGlobalLoading && window.hideGlobalLoading) {
+        window.hideGlobalLoading();
+      }
+      showApiResult(resultId, { error: err.message || String(err) });
+    });
+}
+
+/**
+ * A generic function to call public API endpoints (no authentication required).
  * @param {string} endpoint - The API endpoint to call.
  * @param {object} options - The options for the fetch call.
  * @param {string} resultId - The ID of the element to display the result in.
@@ -121,6 +176,7 @@ function callApi(endpoint, options, resultId, successMessage, useGlobalLoading =
     showLoading(resultId, true);
   }
   
+  // No credentials for public APIs
   fetch(`${apiHost}/${endpoint}`, options)
     .then(res => {
       if (!res.ok) {
@@ -169,7 +225,11 @@ function callQuery() {
     showLoading(resultId, true);
   }
   
-  fetch(`${apiHost}/query`, { method: 'POST', body: formData })
+  fetch(`${apiHost}/query`, { 
+    method: 'POST', 
+    body: formData
+    // Không cần credentials cho public API
+  })
     .then(res => res.json())
     .then(data => {
         if (window.hideGlobalLoading) {
@@ -261,7 +321,7 @@ function callAdd() {
   formData.append('gioitinh', gioitinh);
   formData.append('tuoi', document.getElementById('addTuoi').value);
   formData.append('noio', document.getElementById('addNoio').value);
-  callApi('add_embedding', { method: 'POST', body: formData }, 'addResult', 'Thêm mới thành công!', true);
+  callProtectedApi('add_embedding', { method: 'POST', body: formData }, 'addResult', 'Thêm mới thành công!', true);
   document.getElementById('addForm').reset();
   updateFileName('addFile', 'addFileName', 'Chọn ảnh khuôn mặt (tùy chọn)');
 }
@@ -283,7 +343,7 @@ function callEdit() {
   if (file) formData.append('file', file);
   formData.append('image_id', imageId);
   formData.append('image_path', document.getElementById('editImagePath').value);
-  callApi('edit_embedding', { method: 'POST', body: formData }, 'editResult', 'Sửa thành công!', true);
+  callProtectedApi('edit_embedding', { method: 'POST', body: formData }, 'editResult', 'Sửa thành công!', true);
   document.getElementById('editForm').reset();
   updateFileName('editFile', 'editFileName', 'Chọn ảnh mới (tùy chọn)');
 }
@@ -310,12 +370,12 @@ function callDelete() {
     formData.append('class_id', id);
     endpoint = 'delete_class';
   }
-  callApi(endpoint, { method: 'POST', body: formData }, 'deleteResult', 'Xóa thành công!', true);
+  callProtectedApi(endpoint, { method: 'POST', body: formData }, 'deleteResult', 'Xóa thành công!', true);
   document.getElementById('deleteForm').reset();
 }
 
 function callReset() {
-  callApi('reset_index', { method: 'POST' }, 'resetResult', 'Reset index thành công!', true);
+  callProtectedApi('reset_index', { method: 'POST' }, 'resetResult', 'Reset index thành công!', true);
 }
 
 function callSearchNguoi() {
@@ -336,7 +396,7 @@ function callSearchNguoi() {
   fetch(`${apiHost}/list_nguoi?query=${encodeURIComponent(query)}&page=${currentPage}&page_size=${pageSize}`)
     .then(res => res.json())
     .then(data => {
-      console.log('API /list_nguoi response:', data); // Debug log
+      // Process data and render
       const resultEl = document.getElementById(resultId);
       if (!resultEl) {
         console.error('Element with id', resultId, 'not found!');

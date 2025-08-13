@@ -20,7 +20,6 @@ router = APIRouter()
 
 async def query_face_service(file: UploadFile = File(...)):
     # ✅ Không load lại FAISS mỗi request - sử dụng thread-safe access
-    print('--- Nhận request /query ---')
     start_total = time.time()
     
     image_bytes = await file.read()
