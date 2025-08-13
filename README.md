@@ -453,7 +453,7 @@ function checkSessionValidity() {
 uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 # Production mode với specific IP  
-uvicorn app:app --host 172.16.8.122 --port 8000 --reload
+uvicorn app:app --host 172.16.x.y --port 8000 --reload
 
 # Check startup logs:
 # 🚀 Khởi tạo Face Recognition System thành công!
