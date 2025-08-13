@@ -1,35 +1,141 @@
+# =================================================================
+# Face Recognition API với MySQL Authentication - Git Ignore
+# Version: 2.0.0 - Production Ready
+# =================================================================
+
 # Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.env
-.env
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
 venv/
 ENV/
+env/
+.venv/
+.conda/
 
-# Jupyter
+# Environment & Configuration
+.env
+*.env
+!.env.example
+config_local.py
+secrets.json
+
+# IDE & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.sublime-project
+.sublime-workspace
+
+# Jupyter Notebooks
 *.ipynb_checkpoints
+.ipynb_checkpoints/
 
+# Face Recognition Data
 # FAISS index & metadata
-*.index
-*.npz
+index/*.index
+index/*.npz
+!index/faiss.py
 
-# Data & logs
+# AI Models (large files)
+model/*.pth
+model/*.onnx
+model/*.pb
+!model/.gitkeep
+model/
+
+# Uploads & User Data
+uploads/
+temp/
+logs/
 *.log
+
+# Training Data & Models
 *.csv
 *.txt
 *.zip
 *.pth
 *.dat
+*.pkl
+*.h5
+*.onnx
 
-# OS
+# MySQL Database Dumps
+*.sql
+database_backup/
+
+# OS Files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# VSCode
-.vscode/
+# 🔐 Security - Never commit credentials
+auth/secrets/
+.secret_key
+auth_secrets.json
+mysql_credentials.json
+database_config.json
+
+# 🛡️ Security sensitive files
+*.key
+*.pem
+*.crt
+*.pem
+*.crt
+auth_config.json
+session_secrets.json
+
+# 📊 Logs & monitoring
+logs/
+audit_logs/
+*.access.log
+*.error.log
+monitoring_data/
+
+# 🧪 Test artifacts
+test_results/
+coverage/
+.pytest_cache/
+.coverage
+
+# 📁 Build & dist
+build/
+dist/
+*.egg-info/
+
+# 🖼️ Large files
+images/
+uploads/
+temp/
+cache/
 
 # Others
 *.bak
 *.swp
+*.tmp
+.DS_Store?

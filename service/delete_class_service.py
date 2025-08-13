@@ -32,7 +32,7 @@ def delete_class_service(
         nguoi_repo.get_total_and_examples(limit=1)
     except Exception as e:
         return {"message": f"Không thể kết nối MySQL: {e}", "status_code": 500}
-    print(f'--- Nhận request xoá class_id={input.class_id} ---')
+    
     # Kiểm tra embedding của image-id 289 trước khi xóa
     # image_id_check = 289
     # try:

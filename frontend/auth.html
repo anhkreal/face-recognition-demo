@@ -136,24 +136,18 @@
     </div>
     <div class="bg-white rounded-xl shadow-md ring-1 ring-gray-900/5">
         <div class="flex border-b border-gray-200">
-            <button id="loginTab" class="tab-btn flex-1 py-4 text-center font-semibold text-indigo-600 border-b-2 border-indigo-600 transition-colors active">Đăng nhập</button>
-            <button id="registerTab" class="tab-btn flex-1 py-4 text-center font-semibold text-gray-500 transition-colors">Đăng ký</button>
+            <button id="loginTab" class="tab-btn flex-1 py-4 text-center font-semibold text-indigo-600 border-b-2 border-indigo-600 transition-colors active">Đăng nhập MySQL</button>
         </div>
         <div class="p-8 form-container">
             <div id="loginForm" class="form-wrapper active space-y-6">
-              <input type="text" id="loginUsername" class="w-full px-4 py-3 text-base" placeholder="Tên đăng nhập" autocomplete="username" />
-              <input type="password" id="loginPassword" class="w-full px-4 py-3 text-base" placeholder="Mật khẩu" autocomplete="current-password" />
+              <input type="text" id="loginUsername" class="w-full px-4 py-3 text-base" placeholder="Tên đăng nhập MySQL" autocomplete="username" />
+              <input type="password" id="loginPassword" class="w-full px-4 py-3 text-base" placeholder="Mật khẩu MySQL" autocomplete="current-password" />
               <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 font-semibold text-base flex items-center justify-center gap-2"><i class="fa-solid fa-right-to-bracket"></i> Đăng nhập</button>
               <div id="loginResult" class="text-sm text-red-600 text-center h-5"></div>
-            </div>
-            <div id="registerForm" class="form-wrapper space-y-6">
-              <form id="registerFormInner" class="space-y-6">
-                <input type="text" id="registerUsername" class="w-full px-4 py-3 text-base" placeholder="Tên đăng nhập" autocomplete="username" />
-                <input type="password" id="registerPassword" class="w-full px-4 py-3 text-base" placeholder="Mật khẩu" autocomplete="new-password" />
-                <input type="password" id="registerPassword2" class="w-full px-4 py-3 text-base" placeholder="Nhập lại mật khẩu" autocomplete="new-password" />
-                <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 font-semibold text-base flex items-center justify-center gap-2"><i class="fa-solid fa-user-plus"></i> Đăng ký</button>
-                <div id="registerResult" class="text-sm text-red-600 text-center h-5"></div>
-              </form>
+              <div class="text-center text-sm text-gray-500">
+                <i class="fa-solid fa-info-circle text-blue-500"></i>
+                Sử dụng tài khoản MySQL từ bảng <code class="bg-gray-100 px-2 py-1 rounded">taikhoan</code>
+              </div>
             </div>
         </div>
     </div>
@@ -163,34 +157,9 @@
   </div>
   <script>
     const loginTab = document.getElementById('loginTab');
-    const registerTab = document.getElementById('registerTab');
     const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
     const loginBtn = loginForm.querySelector('button');
     const loginResult = document.getElementById('loginResult');
-    const registerBtn = registerForm.querySelector('button');
-    const registerResult = document.getElementById('registerResult');
-
-    function switchTab(isLogin) {
-        if (isLogin) {
-            loginTab.classList.add('active', 'text-indigo-600', 'border-indigo-600');
-            loginTab.classList.remove('text-gray-500');
-            registerTab.classList.remove('active', 'text-indigo-600', 'border-indigo-600');
-            registerTab.classList.add('text-gray-500');
-            loginForm.classList.add('active');
-            registerForm.classList.remove('active');
-        } else {
-            registerTab.classList.add('active', 'text-indigo-600', 'border-indigo-600');
-            registerTab.classList.remove('text-gray-500');
-            loginTab.classList.remove('active', 'text-indigo-600', 'border-indigo-600');
-            loginTab.classList.add('text-gray-500');
-            registerForm.classList.add('active');
-            loginForm.classList.remove('active');
-        }
-    }
-
-    loginTab.onclick = () => switchTab(true);
-    registerTab.onclick = () => switchTab(false);
 
     function showSnackbar(message, type = 'info', duration = 2500) {
       let snackbar = document.getElementById('snackbar');
@@ -223,22 +192,38 @@
       loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng nhập...';
       try {
         let apiHost = '';
-        if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.122') {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
           apiHost = window.location.origin;
         } else {
-          apiHost = 'http://172.16.8.122:8000';
+          apiHost = 'http://127.0.0.1:8000';
         }
-        const res = await fetch(apiHost + '/login', {
+        const res = await fetch(apiHost + '/auth/login', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username, passwrd: password })
+          // Remove credentials to avoid CORS issue
+          body: (() => {
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            return formData;
+          })()
         });
         const data = await res.json();
         if (res.ok && data.success) {
           showSnackbar('Đăng nhập thành công!', 'success');
           sessionStorage.setItem('username', username);
           sessionStorage.setItem('isLoggedIn', 'true');
-          window.location.href = 'index.html';
+          
+          // Ensure token exists before storing
+          if (data.token) {
+            sessionStorage.setItem('authToken', data.token);
+          } else {
+            alert('Lỗi: Không nhận được token từ server');
+            return;
+          }
+          
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1000); // Delay to ensure storage is complete
         } else {
           showSnackbar(data.message || 'Đăng nhập thất bại.', 'error');
           loginResult.textContent = data.message || 'Đăng nhập thất bại.';
@@ -249,63 +234,6 @@
       }
       loginBtn.disabled = false;
       loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập';
-    };
-
-    registerBtn.onclick = async function() {
-      const username = document.getElementById('registerUsername').value.trim();
-      const password = document.getElementById('registerPassword').value;
-      const password2 = document.getElementById('registerPassword2').value;
-      registerResult.textContent = '';
-      if (!username || !password || !password2) {
-        showSnackbar('Vui lòng nhập đầy đủ thông tin.', 'error');
-        registerResult.textContent = 'Vui lòng nhập đầy đủ thông tin.';
-        return;
-      }
-      if (password !== password2) {
-        showSnackbar('Mật khẩu nhập lại không khớp.', 'error');
-        registerResult.textContent = 'Mật khẩu nhập lại không khớp.';
-        return;
-      }
-      registerBtn.disabled = true;
-      registerBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng ký...';
-      try {
-        let apiHost = '';
-        if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.122') {
-          apiHost = window.location.origin;
-        } else {
-          apiHost = 'http://172.16.8.122:8000';
-        }
-        const res = await fetch(apiHost + '/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: username, passwrd: password })
-        });
-        let data;
-        try {
-          data = await res.json();
-        } catch (jsonErr) {
-          showSnackbar('Phản hồi máy chủ không hợp lệ.', 'error');
-          registerResult.textContent = 'Phản hồi máy chủ không hợp lệ.';
-          registerBtn.disabled = false;
-          registerBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Đăng ký';
-          return;
-        }
-        if (res.ok && data.success) {
-          showSnackbar('Đăng ký thành công!', 'success');
-          sessionStorage.setItem('username', username);
-          sessionStorage.setItem('isLoggedIn', 'true');
-          document.getElementById('registerFormInner').reset();
-          window.location.href = 'index.html';
-        } else {
-          showSnackbar(data.message || 'Đăng ký thất bại.', 'error');
-          registerResult.textContent = data.message || 'Đăng ký thất bại.';
-        }
-      } catch (err) {
-        showSnackbar('Lỗi kết nối máy chủ.', 'error');
-        registerResult.textContent = 'Lỗi kết nối máy chủ.';
-      }
-      registerBtn.disabled = false;
-      registerBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Đăng ký';
     };
   </script>
 </body>

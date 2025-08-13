@@ -1,7 +1,43 @@
-fastapi
-uvicorn
-opencv-python
-numpy
-torch
-albumentations
-faiss-cpu
+# Face Recognition API với MySQL Authentication v2.0.0
+# Updated: August 2025 - Production Ready
+
+# Core Framework
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+
+# Computer Vision & AI
+opencv-python>=4.8.1
+numpy>=1.24.3
+torch>=2.0.1
+albumentations>=1.3.1
+faiss-cpu>=1.7.4
+Pillow>=10.0.0
+
+# Database & Authentication
+mysql-connector-python>=8.2.0
+pymysql>=1.1.0
+
+# Web & File Handling  
+python-multipart>=0.0.6
+aiofiles>=23.2.1
+
+# Validation & Config
+pydantic>=2.4.0
+python-dotenv>=1.0.0
+
+# Security & Authentication
+cryptography>=41.0.0
+python-jose[cryptography]>=3.3.0
+
+# Development & Testing (optional)
+pytest>=7.4.0
+httpx>=0.25.0
+
+# Optional: Production ASGI Server
+# gunicorn>=21.2.0
+
+# Performance & Monitoring
+psutil>=5.9.0
+
+# Additional utilities
+requests>=2.31.0

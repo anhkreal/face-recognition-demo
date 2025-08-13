@@ -33,7 +33,6 @@ def add_embedding_service(
         except Exception as e:
             return {"message": f"Không thể kết nối FAISS: {e}", "status_code": 500}
     
-    print(f'--- Nhận request thêm embedding image_id={input.image_id}, class_id={input.class_id} ---')
     # Kiểm tra tồn tại image_id hoặc image_path
     if str(input.image_id) in [str(id) for id in faiss_manager.image_ids]:
         return {"message": f"image_id {input.image_id} đã tồn tại!", "status_code": 400}

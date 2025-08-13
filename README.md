@@ -1,52 +1,75 @@
-# Face Recognition API System 🚀
+# 🤖 Face Recognition API với MySQL Authentication
 
 ## 📖 Tổng quan
 
-Hệ thống Face Recognition API là một ứng dụng nhận diện khuôn mặt **enterprise-grade** được xây dựng bằng Python, sử dụng FastAPI làm backend framework. Hệ thống kết hợp **thư viện InsightFace** với mô hình ArcFace để trích xuất đặc trưng khuôn mặt, FAISS để tìm kiếm vector tương tự, và MySQL để lưu trữ thông tin người dùng.
+Hệ thống nhận diện khuôn mặt AI tiên tiến sử dụng **deep learning** và **FAISS vector search**, với authentication dựa trên **MySQL database**. Hệ thống kết hợp **InsightFace ArcFace model** để trích xuất đặc trưng khuôn mặt với **token-based authentication** để bảo mật các thao tác nhạy cảm.
 
-## 🏗️ Kiến trúc hệ thống
+## 🏗️ Kiến Trúc Hệ Thống
 
 ```
-Frontend (HTML/JS/CSS)
+Frontend (Web UI)
        ↓
-FastAPI Backend (Python) + Health Monitoring
+MySQL Token Authentication 🔐
+       ↓
+FastAPI Backend (Python)
        ↓ ↙ ↘
-   MySQL    FAISS    ArcFace Model
+   MySQL DB   FAISS    ArcFace Model
+   (taikhoan)
 ```
 
-### 🔧 Thành phần chính:
-- **Frontend**: Giao diện web HTML/CSS/JavaScript
-- **Backend API**: FastAPI với shared instances optimization
-- **Database**: MySQL với connection pooling
-- **Vector Database**: FAISS với atomic operations
-- **AI Model**: ArcFace với shared feature extractor
-- **Health System**: Comprehensive health checks và monitoring
-- **Performance Monitor**: Real-time performance tracking
+### 🔧 Thành Phần Chính:
+- **Frontend**: Giao diện web với token-based authentication
+- **MySQL Auth**: Token-based authentication với MySQL database  
+- **Backend API**: FastAPI với Bearer token authorization
+- **User Database**: MySQL table `taikhoan` với username/password
+- **Vector Database**: FAISS index với atomic operations
+- **AI Model**: ArcFace model với shared feature extractor
+- **Health System**: Real-time health monitoring
+
+## 🔐 Hệ Thống Bảo Mật MySQL Authentication
+
+### **Authentication & Authorization**
+- **Bearer Tokens**: Session tokens với MySQL storage
+- **Token-based Auth**: Custom authentication với MySQL backend
+- **Role-Based Access Control**: Username-based permission system
+- **Password Security**: Secure password validation
+- **Session Management**: Token lifecycle management
+
+### **API Security Model**
+- 🟢 **Public APIs**: Query, search, health check (không cần đăng nhập)
+- 🔒 **Protected APIs**: Add, edit, delete (cần đăng nhập thông qua bảng taikhoan MySQL)
+- 🛡️ **Admin Operations**: Full system access với proper authentication
 
 ## 🚀 Tính năng
 
-### 1. 🔐 Xác thực người dùng
-- Đăng ký tài khoản mới
-- Đăng nhập hệ thống
-- Quản lý phiên làm việc
+### 1. 🔐 MySQL Authentication & User Management
+- **Đăng nhập**: POST `/auth/login` - Đăng nhập với username/password
+- **Đăng xuất**: POST `/auth/logout` - Logout và clear session token
+- **Token validation**: Automatic Bearer token validation trong protected APIs
+- **Session Management**: Token-based session với MySQL storage
 
-### 2. 🎯 Nhận diện khuôn mặt (Optimized)
+### 2. 🎯 Nhận diện khuôn mặt (Public APIs)
 - Upload ảnh và nhận diện người trong ảnh với **shared feature extractor**
 - Trả về thông tin chi tiết người được nhận diện
 - Độ chính xác cao với threshold 0.5
 - **Performance**: <100ms response time với shared instances
+- **No Authentication Required**: Sử dụng tự do không cần token
 
-### 3. 📊 Quản lý dữ liệu
-- Thêm người mới vào hệ thống với **atomic FAISS operations**
-- Chỉnh sửa thông tin người đã có
-- Xóa người khỏi hệ thống với **thread-safe operations**
-- Tìm kiếm người theo tên, tuổi, địa chỉ
+### 3. 📊 Quản lý dữ liệu (Protected APIs)
+- **Thêm người mới**: POST `/add_embedding` - 🔒 Cần đăng nhập qua MySQL
+- **Chỉnh sửa thông tin**: POST `/edit_embedding` - 🔒 Cần đăng nhập qua MySQL
+- **Audit Logs**: Mọi thao tác được log với username và timestamp
 
-### 4. 🔍 Quản lý vector embedding (Enhanced)
-- Thêm/sửa/xóa embedding với **performance tracking**
+### 4. 🗑️ Xóa dữ liệu (Protected APIs)
+- **Xóa ảnh**: POST `/delete_image` - � Cần đăng nhập qua MySQL
+- **Xóa người**: POST `/delete_class` - � Cần đăng nhập qua MySQL
+- **Reset hệ thống**: POST `/reset_index` - � Cần đăng nhập qua MySQL
+
+### 5. 🔍 Tìm kiếm & Thống kê (Public APIs)
 - Tìm kiếm embedding theo class_id
-- Reset toàn bộ index FAISS
+- Danh sách người trong hệ thống
 - Kiểm tra trạng thái index với **detailed metrics**
+- **No Authentication Required**: Accessible công khai
 
 ### 5. 🏥 **System Health & Monitoring** (NEW)
 - **Health Endpoints**: `/health`, `/health/detailed`, `/health/ready`, `/health/live`
@@ -267,129 +290,312 @@ sys.path.append('[ĐỘI_DẪN_DỰ_ÁN]/insightface/recognition/arcface_torch')
 # Đặt file model vào thư mục model/
 # - glint360k_cosface_r18_fp16_0.1.pth
 # - ms1mv3_arcface_r18_fp16.pth
-```
+## 🛡️ MySQL Authentication - Hướng Dẫn Sử Dụng
 
-#### Kiểm tra cấu hình trong `config.py`:
-```python
-MODEL_PATH = 'model/glint360k_cosface_r18_fp16_0.1.pth'
-FAISS_INDEX_PATH = 'index/faiss_db_r18.index'
-FAISS_META_PATH = 'index/faiss_db_r18_meta.npz'
-```
+### **🔐 Authentication Flow**
 
-### 5. Khởi tạo FAISS Index (lần đầu)
+#### 1. **Đăng nhập và nhận Bearer Token**
 ```bash
-python dump_faiss_vectors.py
+# POST /auth/login - Đăng nhập bằng username/password
+curl -X POST "http://localhost:8000/auth/login" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "username": "your_username",
+       "password": "your_password"
+     }'
+
+# Response:
+{
+  "success": true,
+  "token": "session_token_string",
+  "message": "Đăng nhập thành công",
+  "username": "your_username"
+}
+```
+
+#### 2. **Sử dụng Bearer Token trong API calls**
+```bash
+# Lưu token vào biến
+TOKEN="session_token_string"
+
+# Sử dụng token trong header Authorization
+curl -X POST "http://localhost:8000/add_embedding" \
+     -H "Authorization: Bearer $TOKEN" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@photo.jpg" \
+     -F "ten_nguoi=Nguyen Van A" \
+     -F "tuoi=25" \
+     -F "gioi_tinh=Nam" \
+     -F "noi_o=Ha Noi"
+```
+
+#### 3. **Đăng xuất và clear session**
+```bash
+# POST /auth/logout - Clear session token
+curl -X POST "http://localhost:8000/auth/logout" \
+     -H "Authorization: Bearer $TOKEN"
+
+# Response:
+{
+  "success": true,
+  "message": "Đăng xuất thành công"
+}
+```
+
+### **🔒 API Permission Examples**
+
+#### 1. **Public APIs (Không cần đăng nhập)**
+```bash
+# Query face recognition - Không cần Authorization header
+curl -X POST "http://localhost:8000/query" \
+     -H "Content-Type: multipart/form-data" \
+     -F "file=@photo.jpg"
+
+# Health check
+curl http://localhost:8000/health
+
+# List people
+curl http://localhost:8000/list_nguoi
+```
+
+#### 2. **Protected APIs (Cần đăng nhập qua MySQL)**
+```bash
+# Add embedding - Cần đăng nhập
+curl -X POST "http://localhost:8000/add_embedding" \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "file=@photo.jpg" \
+     -F "ten_nguoi=Test User"
+
+# Edit embedding
+curl -X POST "http://localhost:8000/edit_embedding" \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "image_id=123"
+
+# Delete image - Cần đăng nhập
+curl -X POST "http://localhost:8000/delete_image" \
+     -H "Authorization: Bearer $TOKEN" \
+     -F "image_id=123"
+
+# Reset system - Cần đăng nhập (NGUY HIỂM!)
+curl -X POST "http://localhost:8000/reset_index" \
+     -H "Authorization: Bearer $TOKEN"
+```
+
+### **📊 JavaScript Frontend Integration**
+
+```javascript
+// 1. Login và lưu token
+async function login(username, password) {
+    const response = await fetch('/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            username: username,
+            password: password
+        })
+    });
+    
+    const data = await response.json();
+    if (data.success && data.token) {
+        sessionStorage.setItem('authToken', data.token);
+        return data;
+    }
+    throw new Error('Login failed');
+}
+
+// 2. Sử dụng token cho protected APIs
+async function addEmbedding(formData) {
+    const token = sessionStorage.getItem('authToken');
+    
+    const response = await fetch('/add_embedding', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: formData
+    });
+    
+    if (response.status === 401) {
+        // Token expired hoặc invalid
+        window.location.href = '/auth.html';
+        return;
+    }
+    
+    return await response.json();
+}
+
+// 3. Auto-check session validity (optional)
+function checkSessionValidity() {
+    const token = sessionStorage.getItem('authToken');
+    if (token) {
+        // Test với một API call để kiểm tra token còn valid không
+        fetch('/auth/status', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(response => {
+            if (response.status === 401) {
+                sessionStorage.removeItem('authToken');
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('isLoggedIn');
+                window.location.href = '/auth.html';
+            }
+        });
+    }
+}
 ```
 
 ## 🚀 Chạy ứng dụng
 
-### 1. Khởi động Backend API
+### 1. Khởi động Backend API với MySQL Authentication
 ```bash
-# Development mode với shared instances optimization
+# Development mode với MySQL security
 uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
-# Production mode với specific IP
+# Production mode với specific IP  
 uvicorn app:app --host 172.16.8.122 --port 8000 --reload
 
-# Check startup logs for shared instances initialization:
-# 🔄 Initializing shared instances...
-# ✅ Shared instances initialized successfully!
+# Check startup logs:
+# 🚀 Khởi tạo Face Recognition System thành công!
+# 🔐 MySQL Authentication system đã được tích hợp!
+# 📊 Security middleware và logging đã được kích hoạt!
 ```
 
-### 2. Truy cập ứng dụng
-- **API Documentation**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-- **Detailed Health**: http://localhost:8000/health/detailed
-- **Frontend**: Mở file `frontend/index.html` trong trình duyệt
-- **Trang đăng nhập**: `frontend/auth.html`
+### 2. Truy cập ứng dụng với MySQL Authentication
+- **API Documentation**: http://localhost:8000/docs (với MySQL integration)
+- **Authentication Docs**: Xem section "🔐 Authentication" trong Swagger UI
+- **Health Check**: http://localhost:8000/health (Public)
+- **Protected APIs**: Cần MySQL session token trong Authorization header
+- **Admin Panel**: Chỉ user đã đăng nhập mới access được
 
-### 3. **Kiểm tra hệ thống** (Enhanced)
+### 3. **Kiểm tra MySQL Authentication System**
 ```bash
-# Test basic health
-curl http://localhost:8000/health
+# Test login endpoint
+curl -X POST "http://localhost:8000/auth/login" \
+     -F "username=your_username" \
+     -F "password=your_password"
 
-# Test detailed health với metrics
-curl http://localhost:8000/health/detailed
+# Test protected endpoint (sẽ fail without token)
+curl -X POST "http://localhost:8000/add_embedding"
 
-# Test MySQL connection
-python db/mysql_conn.py
-
-# Test FAISS performance
-python optimization/startup.py
+# Test with valid token
+curl -X POST "http://localhost:8000/add_embedding" \
+     -H "Authorization: Bearer <your_session_token>"
 ```
 
-### 4. **Load Testing** (NEW)
+### 4. **Lần đầu khởi động hệ thống**
 ```bash
-# Run concurrent load test
-cd test
-python run_concurrent_test.py --test-type basic
+# 1. Khởi động server
+uvicorn app:app --host 0.0.0.0 --port 8000
 
-# Run advanced load test scenarios  
-python load_test_scenarios.py
+# 2. Đăng nhập bằng MySQL account (cần tạo trước trong bảng taikhoan)
+# Sử dụng username/password từ bảng MySQL taikhoan
 
-# Generate performance report
-python performance_analysis.py
+# 3. Test đăng nhập
+curl -X POST "http://localhost:8000/auth/login" \
+     -F "username=your_mysql_username" \
+     -F "password=your_mysql_password"
+
+# 4. Sử dụng token nhận được cho protected APIs
+curl -X POST "http://localhost:8000/add_embedding" \
+     -H "Authorization: Bearer <session_token>" \
+     -F "file=@image.jpg" \
+     -F "ten_nguoi=Test User"
 ```
 
-## 📡 API Endpoints
+## 📡 API Endpoints với MySQL Authentication
 
-### 🔐 Authentication
-- `POST /register` - Đăng ký tài khoản mới
-- `POST /login` - Đăng nhập
+### 🔐 **MySQL Authentication APIs**
+- `POST /auth/login` - Đăng nhập với username/password từ MySQL
+- `POST /auth/logout` - Đăng xuất và clear session token
 
-### 🎯 Face Recognition (Optimized)
-- `POST /query` - Nhận diện khuôn mặt từ ảnh upload (với shared instances)
+### 🎯 **Face Recognition APIs (Public - Không cần đăng nhập)**
+- `POST /query` - Nhận diện khuôn mặt từ ảnh upload
 - `POST /query_top5` - Trả về top 5 kết quả tương tự nhất
 
-### 📊 Data Management (Thread-Safe)
-- `POST /add_embedding` - Thêm người mới với ảnh (atomic operations)
-- `PUT /edit_embedding` - Chỉnh sửa thông tin người (thread-safe)
-- `DELETE /delete_image/{image_id}` - Xóa ảnh cụ thể
-- `DELETE /delete_class/{class_id}` - Xóa toàn bộ thông tin người
+### 📊 **Data Management APIs (Protected - Cần đăng nhập MySQL)**
+- `POST /add_embedding` - 🔒 Thêm người mới với ảnh (cần đăng nhập)
+- `PUT /edit_embedding` - 🔒 Chỉnh sửa thông tin người (cần đăng nhập)
 
-### 🔍 Search & Query
+### 🗑️ **Delete APIs (Protected - Cần đăng nhập MySQL)**
+- `DELETE /delete_image` - 🗑️ Xóa ảnh cụ thể (cần đăng nhập)
+- `DELETE /delete_class` - 🗑️ Xóa toàn bộ thông tin người (cần đăng nhập)
+- `POST /reset_index` - 🗑️ Reset toàn bộ FAISS index (cần đăng nhập)
+
+### 🔍 **Search & Query APIs (Public)**
 - `GET /list_nguoi` - Danh sách và tìm kiếm người (có phân trang)
 - `GET /search_embeddings` - Tìm kiếm embedding theo class_id
 - `GET /get_image_ids_by_class/{class_id}` - Lấy danh sách ảnh của người
 
-### ⚙️ System Management (Enhanced)
+### ⚙️ **System Management APIs (Public)**
 - `GET /index_status` - Kiểm tra trạng thái FAISS index (detailed metrics)
-- `POST /reset_index` - Reset toàn bộ FAISS index (atomic)
 - `GET /vector_info` - Thông tin chi tiết về vector database
 
-### 🏥 **Health & Monitoring** (NEW)
+### 🏥 **Health & Monitoring APIs (Public)**
 - `GET /health` - Basic health check
 - `GET /health/detailed` - Detailed health với system metrics
 - `GET /health/ready` - Readiness check cho Kubernetes
 - `GET /health/live` - Liveness check
-- **Response bao gồm**: 
-  - System metrics (CPU, memory, disk)
-  - FAISS status và vector count
-  - Performance metrics
-  - Service availability status
+
+**Response Examples với MySQL Authentication:**
+```json
+// Public API (không cần đăng nhập)
+GET /health
+{
+  "status": "healthy",
+  "timestamp": "2024-12-19T10:00:00Z"
+}
+}
+
+// Protected API với audit log
+POST /add_embedding (với Bearer token)
+{
+  "success": true,
+  "message": "Embedding added successfully",
+  "audit_info": {
+    "performed_by": "username",
+    "action": "add_embedding"
+  }
+}
+
+// Delete API với detailed audit
+POST /delete_class (với Bearer token)
+{
+  "success": true,
+  "message": "Class deleted successfully",
+  "audit_info": {
+    "performed_by": "username",
+    "action": "delete_class",
+    "target_class_id": "123",
+    "warning": "TOÀN BỘ dữ liệu của class_id đã được xóa vĩnh viễn"
+  }
+}
+```
 
 ## 🎯 Workflow sử dụng
 
 ### 1. Đăng nhập hệ thống
-1. Mở `frontend/auth.html`
-2. Đăng ký tài khoản mới hoặc đăng nhập
-3. Chuyển hướng đến trang chính
+1. Mở `http://localhost:8000/auth.html`
+2. Đăng nhập bằng tài khoản có trong bảng `taikhoan` MySQL
+3. Chuyển hướng đến trang chính sau khi đăng nhập thành công
 
-### 2. Nhận diện khuôn mặt
+### 2. Nhận diện khuôn mặt (Không cần đăng nhập)
 1. Chọn tab "Nhận diện khuôn mặt"
 2. Upload ảnh cần nhận diện
 3. Nhận kết quả với thông tin chi tiết
 
-### 3. Thêm người mới
-1. Chọn tab "Thêm người mới"
-2. Nhập thông tin: tên, tuổi, giới tính, nơi ở
-3. Upload ảnh khuôn mặt
-4. Hệ thống tự động tạo class_id và lưu embedding
+### 3. Thêm người mới (Cần đăng nhập)
+1. **Đảm bảo đã đăng nhập** qua bảng taikhoan MySQL
+2. Chọn tab "Thêm người mới"
+3. Nhập thông tin: tên, tuổi, giới tính, nơi ở
+4. Upload ảnh khuôn mặt
+5. Hệ thống tự động tạo class_id và lưu embedding
 
-### 4. Quản lý dữ liệu
-1. Chọn tab "Danh sách người"
-2. Tìm kiếm theo tên, tuổi, địa chỉ
-3. Chỉnh sửa hoặc xóa thông tin
+### 4. Quản lý dữ liệu (Cần đăng nhập)
+1. **Đảm bảo đã đăng nhập** qua bảng taikhoan MySQL
+2. Chọn tab "Danh sách người"
+3. Tìm kiếm theo tên, tuổi, địa chỉ
+4. Chỉnh sửa hoặc xóa thông tin
 
 ## ⚙️ Cấu hình nâng cao
 

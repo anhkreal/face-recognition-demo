@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+import os
+import time
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from api.face_query import router as face_query_router
 from api.delete_class import delete_class_router
@@ -11,116 +13,214 @@ from api.reset_index import reset_router
 from api.face_query_top5 import face_query_top5_router
 from api.edit_embedding import edit_embedding_router
 from api.list_nguoi import list_nguoi_router
-from api.register import register_router
-from api.login import login_router
 from api.search_embeddings import embedding_search_router
 from api.health import health_router
-from api.performance import performance_router
-import os
+# Optional performance monitoring
+try:
+    from api.performance import performance_router
+    PERFORMANCE_AVAILABLE = True
+except ImportError:
+    PERFORMANCE_AVAILABLE = False
+    print("⚠️ Performance monitoring not available")
+
+# MySQL Authentication
+from auth.mysql_auth_api import router as mysql_auth_router
+
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 
 app = FastAPI(
-    title="🤖 Hệ Thống Nhận Diện Khuôn Mặt",
+    title="🤖 Hệ Thống Nhận Diện Khuôn Mặt với MySQL Authentication",
     description="""
     ## 🎯 Giới Thiệu Hệ Thống
     
     **Hệ thống nhận diện khuôn mặt AI tiên tiến** sử dụng công nghệ deep learning và FAISS để:
-    - 🔍 **Nhận diện khuôn mặt** từ ảnh với độ chính xác cao
-    - 👥 **Quản lý thông tin người** (tên, tuổi, giới tính, nơi ở)
-    - 🗄️ **Lưu trữ và tìm kiếm** embedding vectors hiệu quả
-    - ⚡ **Tối ưu hiệu suất** với singleton pattern và FAISS indexing
     
-    ## 📋 Các Chức Năng Chính
+    ### 🚀 Tính Năng Chính
+    - **🔍 Tìm kiếm khuôn mặt**: Tìm người giống nhất từ database
+    - **➕ Quản lý dữ liệu**: Thêm, sửa, xóa thông tin người dùng
+    - **📊 Thống kê**: Xem thông tin database và hiệu suất
+    - **🔐 Bảo mật**: Đăng nhập MySQL để bảo vệ các thao tác nhạy cảm
     
-    ### 🔐 **Xác Thực & Bảo Mật**
-    - `/login` - Đăng nhập hệ thống
-    - `/register` - Đăng ký tài khoản mới
+    ### 🔐 Hệ Thống Authentication
+    **MySQL Database Authentication:**
+    - 🏠 **Public APIs**: Tìm kiếm khuôn mặt, xem thông tin (không cần đăng nhập)
+    - 🔒 **Protected APIs**: Thêm, sửa, xóa dữ liệu (yêu cầu đăng nhập MySQL)
     
-    ### 👤 **Nhận Diện Khuôn Mặt**
-    - `/query` - Nhận diện khuôn mặt từ ảnh
-    - `/add_embedding` - Thêm người mới vào hệ thống
-    - `/edit_embedding` - Cập nhật thông tin khuôn mặt
+    ### 🛡️ Authentication & Authorization
     
-    ### 🗑️ **Quản Lý Dữ Liệu**
-    - `/delete_image` - Xóa ảnh cụ thể
-    - `/delete_class` - Xóa toàn bộ thông tin người
-    - `/reset_index` - Khởi tạo lại hệ thống
+    **MySQL Token Authentication:**
+    - Sử dụng `/auth/login` để đăng nhập với username/password từ bảng `taikhoan`
+    - Nhận session token để sử dụng cho protected APIs
+    - Token được validate qua MySQL database
+    - Logout với `/auth/logout` để clear session
     
-    ### 📊 **Tìm Kiếm & Thống Kê**
-    - `/list_nguoi` - Danh sách người trong hệ thống
-    - `/search_embeddings` - Tìm kiếm embedding
-    - `/index_status` - Trạng thái FAISS index
-    - `/vector_info` - Thông tin chi tiết vectors
+    **Security Model:**
+    - 🟢 **Public**: Query, search, health check (không cần đăng nhập)
+    - 🔒 **Protected**: Add, edit, delete (cần đăng nhập qua bảng taikhoan MySQL)
     
-    ### 🏥 **Monitoring & Health Check**
-    - `/health` - Kiểm tra sức khỏe hệ thống
-    - `/health/detailed` - Thông tin chi tiết hiệu suất
+    **Yêu Cầu Authentication:**
+    Đảm bảo phải đăng nhập thông qua bảng taikhoan MySQL mới được các tác vụ thêm/sửa/xóa MySQL/FAISS, còn truy vấn khỏi cần
     
-    ## 🚀 Tính Năng Nổi Bật
+    ### 📝 Hướng Dẫn Sử Dụng
+    1. **Tìm kiếm khuôn mặt**: Dùng `/query` với ảnh upload
+    2. **Đăng nhập**: POST `/auth/login` với username/password MySQL
+    3. **Quản lý dữ liệu**: Sau khi đăng nhập, có thể add/edit/delete
+    4. **Đăng xuất**: POST `/auth/logout` để kết thúc session
     
-    - **Singleton Architecture**: Tối ưu 99% memory, 98% faster response
-    - **FAISS Indexing**: Tìm kiếm vector siêu nhanh
-    - **Thread-Safe**: Hỗ trợ concurrent requests
-    - **Auto Health Monitoring**: Theo dõi hiệu suất real-time
-    - **RESTful API**: Dễ tích hợp với các hệ thống khác
-    
-    ## 📖 Hướng Dẫn Sử Dụng
-    
-    1. **Đăng ký/Đăng nhập** để xác thực
-    2. **Thêm người mới** bằng `/add_embedding`
-    3. **Nhận diện** bằng `/query` với ảnh cần tìm
-    4. **Quản lý dữ liệu** qua các API CRUD
-    5. **Monitor hệ thống** qua health endpoints
-    
-    ## 🔧 Thông Tin Kỹ Thuật
-    
-    - **Framework**: FastAPI + Pydantic
-    - **AI Engine**: Face Recognition + FAISS
-    - **Database**: In-memory với disk persistence  
-    - **Security**: Form-based authentication
-    - **Performance**: Optimized với shared instances
-    
-    ---
-    *Phát triển bởi AI Team - Hệ thống nhận diện khuôn mặt thông minh*
+    ### 🛠️ Công Nghệ Sử Dụng
+    - **AI Framework**: ArcFace, FAISS Vector Search
+    - **Backend**: FastAPI, Python
+    - **Database**: MySQL Authentication
+    - **Security**: Session-based Authentication với Bearer tokens
     """,
     version="2.0.0",
-    # contact={
-    #     "name": "Face Recognition API Support",
-    #     "email": "support@faceapi.com"
-    # },
-    # license_info={
-    #     "name": "MIT License",
-    #     "url": "https://opensource.org/licenses/MIT"
-    # },
-    swagger_ui_parameters={
-        "defaultModelsExpandDepth": -1,
-        "displayRequestDuration": True,
-        "docExpansion": "list",
-        "operationsSorter": "method",
-        "filter": True
+    contact={
+        "name": "Face Recognition API Support",
+        "email": "support@faceapi.com"
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
     }
 )
+
+# CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:8000", "http://localhost:8000", "*"],
-    allow_credentials=True,
+    allow_origins=["*"],  # Trong production nên chỉ định cụ thể
+    allow_credentials=False,  # False cho token-based auth
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(face_query_router)
-app.include_router(delete_class_router)
-app.include_router(add_router)
-app.include_router(delete_image_router)
-app.include_router(vector_info_router)
-app.include_router(get_image_ids_by_class_router)
-app.include_router(status_router)
-app.include_router(reset_router)
-app.include_router(face_query_top5_router)
-app.include_router(edit_embedding_router)
-app.include_router(list_nguoi_router)
-app.include_router(register_router) 
-app.include_router(login_router)
-app.include_router(embedding_search_router)
-app.include_router(health_router)
-app.include_router(performance_router)
+# Security Headers Middleware
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    # Check if this is a Swagger/docs request
+    is_docs_request = any(path in str(request.url) for path in ["/docs", "/redoc", "/openapi.json"])
+    
+    # Add security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    
+    # More permissive CSP for Swagger UI
+    if is_docs_request:
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self' https:; "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+            "font-src 'self' https://cdn.jsdelivr.net; "
+            "connect-src 'self'"
+        )
+    else:
+        # Stricter CSP for API endpoints
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'"
+        )
+    
+    response.headers["X-Process-Time"] = str(process_time)
+    
+    return response
+
+# Performance Monitoring Middleware
+@app.middleware("http")
+async def performance_monitoring(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    
+    # Log request performance (without sensitive data)
+    if not any(path in str(request.url) for path in ["/docs", "/redoc", "/openapi.json"]):
+        process_time = time.time() - start_time
+        print(f"📊 {request.method} {request.url.path} - {response.status_code} - {process_time:.4f}s")
+    
+    return response
+
+# 🔐 MySQL Authentication APIs
+app.include_router(mysql_auth_router)
+
+print("🚀 Khởi tạo Face Recognition System thành công!")
+print("🔐 MySQL Authentication system đã được tích hợp!")
+print("📊 Security middleware và logging đã được kích hoạt!")
+
+# 🏠 Public APIs (không cần authentication)
+app.include_router(face_query_router, tags=["🔍 Tìm Kiếm Khuôn Mặt"])
+app.include_router(face_query_top5_router, tags=["🔍 Tìm Kiếm Khuôn Mặt"])
+app.include_router(vector_info_router, tags=["📊 Thông Tin Hệ Thống"])
+app.include_router(get_image_ids_by_class_router, tags=["📊 Thông Tin Hệ Thống"])
+app.include_router(status_router, tags=["📊 Thông Tin Hệ Thống"])
+app.include_router(list_nguoi_router, tags=["👥 Danh Sách Người"])
+app.include_router(embedding_search_router, tags=["🔍 Tìm Kiếm Khuôn Mặt"])
+app.include_router(health_router, tags=["🏥 Kiểm Tra Sức Khỏe"])
+
+# Optional: Performance monitoring if available
+if PERFORMANCE_AVAILABLE:
+    app.include_router(performance_router, tags=["⚡ Hiệu Suất"])
+
+# 🔒 Protected APIs (cần MySQL authentication)
+app.include_router(add_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
+app.include_router(edit_embedding_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
+app.include_router(delete_class_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
+app.include_router(delete_image_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
+app.include_router(reset_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
+
+@app.get("/", tags=["🏠 Trang Chủ"])
+def read_root():
+    """
+    ## 🏠 Trang Chủ API
+    
+    Chào mừng đến với **Hệ Thống Nhận Diện Khuôn Mặt**!
+    
+    ### 🚀 Bắt Đầu Nhanh
+    1. **Tìm kiếm**: Thử `/query` để tìm khuôn mặt
+    2. **Đăng nhập**: Dùng `/auth/login` với MySQL account
+    3. **Khám phá**: Xem các API categories bên trái
+    
+    ### 📚 Tài Liệu
+    - **Swagger UI**: Trang này (interactive)
+    - **ReDoc**: `/redoc` (detailed docs)
+    - **OpenAPI Schema**: `/openapi.json`
+    """
+    return {
+        "message": "🤖 Face Recognition API với MySQL Authentication",
+        "version": "2.0.0",
+        "status": "✅ Hoạt động",
+        "authentication": "🔐 MySQL Session-based",
+        "docs": {
+            "swagger": "/docs",
+            "redoc": "/redoc",
+            "openapi": "/openapi.json"
+        },
+        "endpoints": {
+            "public": [
+                "POST /query - Tìm kiếm khuôn mặt",
+                "POST /query_top5 - Top 5 kết quả tương tự",
+                "GET /vector_info - Thông tin database",
+                "GET /health - Kiểm tra sức khỏe"
+            ],
+            "protected": [
+                "POST /add_embedding - Thêm người mới (cần đăng nhập)",
+                "PUT /edit_embedding - Sửa thông tin (cần đăng nhập)",
+                "DELETE /delete_class - Xóa người (cần đăng nhập)",
+                "POST /reset_index - Reset database (cần đăng nhập)"
+            ],
+            "auth": [
+                "POST /auth/login - Đăng nhập MySQL",
+                "POST /auth/logout - Đăng xuất"
+            ]
+        }
+    }
+
+if __name__ == "__main__":
+    import uvicorn
+    print("🚀 Starting Face Recognition API with MySQL Authentication...")
+    print("📚 Swagger UI: http://localhost:8000/docs")
+    print("📖 ReDoc: http://localhost:8000/redoc")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
