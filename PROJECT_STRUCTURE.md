@@ -60,7 +60,8 @@ api/
 ├── vector_info.py           # Vector database info (public)
 ├── get_image_ids_by_class.py # Get images by class (public)
 ├── index_status.py          # System status (public)
-└── health.py                # Health check endpoints (public)
+├── health.py                # Health check endpoints (public)
+├── predict.py               # Age/gender prediction endpoint (public, NEW)
 ```
 
 ### 🛠️ Business Logic Services
@@ -72,7 +73,8 @@ service/
 ├── delete_service.py        # Delete operations business logic
 ├── list_nguoi_service.py    # List people business logic
 ├── shared_instances.py      # Singleton pattern for optimization
-└── performance_monitor.py   # Performance tracking service
+├── performance_monitor.py   # Performance tracking service
+├── predict_service.py       # Age/gender prediction logic (NEW)
 ```
 
 ### 🗄️ Database Layer

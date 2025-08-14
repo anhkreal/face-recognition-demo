@@ -36,7 +36,7 @@ FastAPI Backend (Python)
 - **Session Management**: Token lifecycle management
 
 ### **API Security Model**
-- 🟢 **Public APIs**: Query, search, health check (không cần đăng nhập)
+- 🟢 **Public APIs**: Query, search, health check, age/ gender predict (không cần đăng nhập)
 - 🔒 **Protected APIs**: Add, edit, delete (cần đăng nhập thông qua bảng taikhoan MySQL)
 - 🛡️ **Admin Operations**: Full system access với proper authentication
 
@@ -48,12 +48,11 @@ FastAPI Backend (Python)
 - **Token validation**: Automatic Bearer token validation trong protected APIs
 - **Session Management**: Token-based session với MySQL storage
 
-### 2. 🎯 Nhận diện khuôn mặt (Public APIs)
-- Upload ảnh và nhận diện người trong ảnh với **shared feature extractor**
-- Trả về thông tin chi tiết người được nhận diện
-- Độ chính xác cao với threshold 0.5
+### 2. 🎯 Nhận diện khuôn mặt & Dự đoán tuổi/giới tính (Public APIs)
+- **Nhận diện khuôn mặt**: Upload ảnh, trả về thông tin người nhận diện
+- **Dự đoán tuổi/giới tính**: Upload ảnh, trả về tuổi và giới tính dự đoán qua endpoint `/predict`
+- **No Authentication Required**: Sử dụng tự do không cần token cho cả hai tính năng
 - **Performance**: <100ms response time với shared instances
-- **No Authentication Required**: Sử dụng tự do không cần token
 
 ### 3. 📊 Quản lý dữ liệu (Protected APIs)
 - **Thêm người mới**: POST `/add_embedding` - 🔒 Cần đăng nhập qua MySQL
@@ -100,6 +99,7 @@ face_api/
 ├── 
 ├── api/                  # Các API endpoint
 │   ├── face_query.py    # API nhận diện khuôn mặt (optimized)
+│   ├── predict.py      # API dự đoán tuổi/giới tính (NEW)
 │   ├── add_embedding.py # API thêm người mới (thread-safe)
 │   ├── health.py        # API health checks (NEW)
 │   ├── login.py         # API đăng nhập
@@ -110,6 +110,7 @@ face_api/
 │   ├── shared_instances.py     # Singleton pattern for optimization (NEW)
 │   ├── performance_monitor.py  # Performance tracking (NEW)
 │   ├── face_query_service.py   # Optimized face query service
+│   ├── predict_service.py     # Dự đoán tuổi/giới tính (NEW)
 │   ├── add_embedding_service.py
 │   └── ...
 ├── 
@@ -537,6 +538,9 @@ curl -X POST "http://localhost:8000/add_embedding" \
 - `GET /health/ready` - Readiness check cho Kubernetes
 - `GET /health/live` - Liveness check
 
+### 👶 **Age/Gender Prediction API (Public - Không cần đăng nhập)**
+- `POST /predict` - Dự đoán tuổi và giới tính từ ảnh upload
+
 **Response Examples với MySQL Authentication:**
 ```json
 // Public API (không cần đăng nhập)
@@ -584,14 +588,19 @@ POST /delete_class (với Bearer token)
 2. Upload ảnh cần nhận diện
 3. Nhận kết quả với thông tin chi tiết
 
-### 3. Thêm người mới (Cần đăng nhập)
+### 3. Dự đoán tuổi/giới tính (Không cần đăng nhập)
+1. Chọn tab "Dự đoán tuổi/giới tính"
+2. Upload ảnh của người cần dự đoán
+3. Nhận kết quả dự đoán tuổi và giới tính
+
+### 4. Thêm người mới (Cần đăng nhập)
 1. **Đảm bảo đã đăng nhập** qua bảng taikhoan MySQL
 2. Chọn tab "Thêm người mới"
 3. Nhập thông tin: tên, tuổi, giới tính, nơi ở
 4. Upload ảnh khuôn mặt
 5. Hệ thống tự động tạo class_id và lưu embedding
 
-### 4. Quản lý dữ liệu (Cần đăng nhập)
+### 5. Quản lý dữ liệu (Cần đăng nhập)
 1. **Đảm bảo đã đăng nhập** qua bảng taikhoan MySQL
 2. Chọn tab "Danh sách người"
 3. Tìm kiếm theo tên, tuổi, địa chỉ

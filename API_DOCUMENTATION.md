@@ -38,6 +38,23 @@
 
 ---
 
+### 🧑‍🦱 Age/Gender Prediction Endpoint (Public)
+
+#### POST `/predict`
+**Dự đoán tuổi và giới tính từ ảnh khuôn mặt**
+- **Input**: `file: UploadFile` (ảnh JPEG/PNG)
+- **Output**: 
+  - Nếu thành công: `{"success": true, "age": 27, "gender": "male", "message": "OK"}`
+  - Nếu lỗi: `{"success": false, "message": "Không nhận diện được khuôn mặt"}`
+- **Authentication**: None required
+- **Description**: Upload ảnh khuôn mặt, API trả về tuổi và giới tính dự đoán. Không cần đăng nhập.
+- **Example (cURL)**:
+  ```bash
+  curl -X POST "http://localhost:8000/predict" -F "file=@test.jpg"
+  ```
+
+---
+
 ### 🔒 Data Management Endpoints (Protected)
 
 #### POST `/add_embedding`

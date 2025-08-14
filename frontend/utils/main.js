@@ -304,6 +304,118 @@ function callQuery() {
     });
 }
 
+function callPredict() {
+  const file = document.getElementById('predictFile').files[0];
+  const resultId = 'predictResult';
+  if (!file) {
+    showApiResult(resultId, { error: 'Vui lòng chọn một file ảnh.' });
+    return;
+  }
+  
+  // Show snackbar for starting process
+  if (window.showSnackbar) {
+    window.showSnackbar('Đang dự đoán tuổi và giới tính...', 'info');
+  }
+  
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  // Show global loading for predict operations
+  if (window.showGlobalLoading) {
+    window.showGlobalLoading();
+  } else {
+    showLoading(resultId, true);
+  }
+  
+  fetch(`${apiHost}/predict`, { 
+    method: 'POST', 
+    body: formData
+    // Không cần credentials cho public API
+  })
+    .then(res => {
+        console.log('Response status:', res.status);
+        console.log('Response headers:', res.headers);
+        return res.json();
+    })
+    .then(data => {
+        console.log('API response data:', data);
+        if (window.hideGlobalLoading) {
+          window.hideGlobalLoading();
+        }
+        
+        const resultEl = document.getElementById(resultId);
+        if (!data || (!data.pred_age && !data.pred_gender)) {
+            console.log('Failed condition - data:', data);
+            showEmptyState(resultId, 
+              'Không thể dự đoán', 
+              data.message || 'Không thể dự đoán tuổi và giới tính từ ảnh này. Hãy thử với ảnh có khuôn mặt rõ ràng hơn.',
+              'fa-exclamation-triangle'
+            );
+            return;
+        }
+        
+        // Chuẩn hóa dữ liệu từ API
+        const age = data.pred_age || data.age;
+        const gender = (data.pred_gender || data.gender || '').toLowerCase();
+        
+        let html = `
+          <div class="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg shadow-sm p-6 mb-4 transition-all duration-300 hover:shadow-xl">
+            <div class="text-center mb-4">
+              <h3 class="text-xl font-bold text-purple-700 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-magic-wand-sparkles"></i>
+                Kết quả dự đoán
+              </h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="text-center p-4 bg-white rounded-lg border border-blue-200">
+                <div class="text-3xl mb-2">
+                  <i class="fa-solid fa-calendar-days text-blue-500"></i>
+                </div>
+                <div class="text-lg font-semibold text-gray-700">Tuổi</div>
+                <div class="text-3xl font-bold text-blue-600">${age}</div>
+                <div class="text-sm text-gray-500">tuổi</div>
+              </div>
+              
+              <div class="text-center p-4 bg-white rounded-lg border border-pink-200">
+                <div class="text-3xl mb-2">
+                  <i class="fa-solid fa-venus-mars text-pink-500"></i>
+                </div>
+                <div class="text-lg font-semibold text-gray-700">Giới tính</div>
+                <div class="text-2xl font-bold ${gender === 'male' ? 'text-blue-600' : 'text-pink-600'}">
+                  ${gender === 'male' ? 'Nam' : 'Nữ'}
+                </div>
+                <div class="text-sm text-gray-500">
+                  <i class="fa-solid ${gender === 'male' ? 'fa-mars text-blue-500' : 'fa-venus text-pink-500'}"></i>
+                  ${gender}
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+              <div class="text-sm text-gray-600 bg-white rounded-lg p-3 border border-gray-200">
+                <i class="fa-solid fa-info-circle text-blue-500"></i>
+                <strong>Lưu ý:</strong> Đây là dự đoán AI, độ chính xác có thể thay đổi tùy thuộc vào chất lượng ảnh.
+              </div>
+            </div>
+          </div>`;
+        
+        resultEl.innerHTML = html;
+        
+        // Show success snackbar
+        if (window.showSnackbar) {
+          window.showSnackbar(`Dự đoán thành công: ${gender === 'male' ? 'Nam' : 'Nữ'}, ${age} tuổi`, 'success');
+        }
+    })
+    .catch(err => {
+        console.log('Fetch error:', err);
+        if (window.hideGlobalLoading) {
+          window.hideGlobalLoading();
+        }
+        showApiResult(resultId, { error: err.message || String(err) });
+    });
+}
+
 function callAdd() {
   // Show snackbar for starting process
   if (window.showSnackbar) {
@@ -605,6 +717,7 @@ window.updateFileName = (inputId, labelId, defaultText = 'Kéo và thả hoặc 
 };
 
 window.callQuery = callQuery;
+window.callPredict = callPredict;
 window.callAdd = callAdd;
 window.callEdit = callEdit;
 window.callDelete = callDelete;

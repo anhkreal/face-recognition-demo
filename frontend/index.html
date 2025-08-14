@@ -813,7 +813,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
       <div class="text-xl font-bold text-indigo-600 flex items-center gap-3">
         <i class="fa-solid fa-robot text-3xl"></i>
-        <span>Nhận Diện Khuôn Mặt</span>
+        <span>Face Recognition</span>
       </div>
       <div class="flex items-center gap-6">
         <div class="flex items-center gap-1">
@@ -821,6 +821,11 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('query', this)">
           <i class="fa-solid fa-magnifying-glass w-5 text-center"></i> 
           <span class="hidden md:inline">Detection</span> 
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('predict', this)">
+          <i class="fa-solid fa-user-clock w-5 text-center"></i> 
+          <span class="hidden md:inline">Age/Gender</span> 
           <span class="tab-indicator"></span>
         </button>
         <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('searchNguoi', this)">
@@ -911,6 +916,34 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </button>
       </form>
       <div id="queryResult"></div>
+    </section>
+
+    <!-- Predict Age/Gender Section -->
+    <section id="predict" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
+      <h2 class="text-2xl font-bold text-purple-600 flex items-center gap-3">
+        <i class="fa-solid fa-user-clock"></i> 
+        Dự đoán tuổi và giới tính
+        <div class="tooltip">
+          <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+          <span class="tooltiptext">Upload ảnh khuôn mặt để dự đoán tuổi và giới tính của người trong ảnh</span>
+        </div>
+      </h2>
+      <form id="predictForm" class="space-y-4">
+        <div class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition-all" id="predictDropArea">
+            <label for="predictFile" class="file-input-label justify-center text-gray-500" id="predictFileLabel">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+                <div class="ml-3">
+                  <span id="predictFileName" class="block font-medium">Kéo và thả hoặc nhấp để chọn ảnh</span>
+                  <span class="text-sm text-gray-400">Định dạng: JPG, PNG, WEBP. Kích thước tối đa: 10MB</span>
+                </div>
+            </label>
+            <input type="file" id="predictFile" accept="image/*" onchange="updateFileName('predictFile', 'predictFileName')" />
+        </div>
+        <button type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold text-base transition-colors" onclick="callPredict()">
+          <i class="fa-solid fa-magic-wand-sparkles mr-2"></i>Dự đoán tuổi và giới tính
+        </button>
+      </form>
+      <div id="predictResult"></div>
     </section>
 
     <!-- Add Section -->
@@ -1268,7 +1301,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           authNavArea.appendChild(userSpan);
           authNavArea.appendChild(logoutBtn);
         } else {
-          // Hiển thị nút đăng nhập/đăng ký
+          // Hiển thị nút đăng nhập
           const loginBtn = document.createElement('button');
           loginBtn.className = 'px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition flex items-center gap-2';
           loginBtn.id = 'loginNavBtn';
@@ -1277,16 +1310,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             window.location.href = 'auth.html';
           };
 
-          const registerBtn = document.createElement('button');
-          registerBtn.className = 'px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-sm transition flex items-center gap-2';
-          registerBtn.id = 'registerNavBtn';
-          registerBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Register';
-          registerBtn.onclick = function() {
-            window.location.href = 'auth.html';
-          };
-
           authNavArea.appendChild(loginBtn);
-          authNavArea.appendChild(registerBtn);
         }
       }
       renderAuthNav();

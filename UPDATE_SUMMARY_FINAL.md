@@ -91,6 +91,13 @@ auth/
 └── PROJECT_STRUCTURE.md    # ✅ Project organization (new)
 ```
 
+### Prediction Module (New)
+```
+face_api/
+├── predict_service.py      # 🆕 Age/Gender prediction service logic
+└── api/predict.py          # 🆕 API endpoint for age/gender prediction
+```
+
 ---
 
 ## 🔐 Authentication Implementation
@@ -108,9 +115,9 @@ auth/
 ```
 
 ### API Endpoints Summary
-- **Authentication**: `POST /auth/login`, `POST /auth/logout`
-- **Public**: `POST /query`, `GET /health`, `GET /list_nguoi`  
-- **Protected**: `POST /add_embedding`, `DELETE /delete_class`, etc.
+**Authentication**: `POST /auth/login`, `POST /auth/logout`
+**Public**: `POST /query`, `POST /predict` (age/gender), `GET /health`, `GET /list_nguoi`
+**Protected**: `POST /add_embedding`, `DELETE /delete_class`, etc.
 
 ---
 
@@ -127,11 +134,8 @@ auth/
 - [x] **Database**: Schema documented và tested
 
 ### 🎯 Key Features
-- **Simple Authentication**: No complex JWT/RBAC overhead
-- **Clear API Design**: Public vs Protected endpoints
-- **Complete Documentation**: Installation, API reference, changelog
-- **Production Ready**: Security headers, error handling, logging
-- **Maintainable**: Clean code structure, proper organization
+
+**Age/Gender Prediction API**: New `/predict` endpoint for face-based age and gender prediction (public, no authentication required)
 
 ---
 
@@ -176,11 +180,6 @@ auth/
 ## 🏆 Success Criteria - ACHIEVED
 
 ### ✅ Primary Objectives
-- [x] **MySQL Authentication**: "đảm bảo phải đăng nhập thông qua bảng taikhoan MySQL mới được các tác vụ thêm/sửa/xóa MySQL/FAISS, còn truy vấn khỏi cần"
-- [x] **Documentation Update**: "viết lại cho tôi toàn bộ tài liệu trong chương trình phù hợp với hiện tại"
-- [x] **Code Cleanup**: "dọn sạch các file không liên quan trong face_api và trong auth"
-- [x] **API Documentation**: Complete API reference với examples
-
 ### ✅ Quality Assurance
 - [x] **Security**: Proper authentication và headers
 - [x] **Performance**: Optimized database operations
