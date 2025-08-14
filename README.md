@@ -133,7 +133,9 @@ face_api/
 ├── model/               # AI Model
 │   ├── arcface_model.py # Class xử lý ArcFace model
 │   ├── glint360k_cosface_r18_fp16_0.1.pth
-│   └── ms1mv3_arcface_r18_fp16.pth
+│   ├── ms1mv3_arcface_r18_fp16.pth
+│   ├── ModelAge.pth    # Age prediction model (NEW)
+│   └── ModelGender.pth # Gender prediction model (NEW)
 ├── 
 ├── index/               # FAISS vector database
 │   ├── faiss.py        # Class quản lý FAISS index
@@ -221,9 +223,11 @@ uvicorn
 opencv-python
 numpy
 torch
+torchvision
 albumentations
 faiss-cpu
 pymysql
+pillow
 ```
 
 **Lưu ý về InsightFace**: Dự án này sử dụng source code InsightFace được tích hợp sẵn trong thư mục `insightface/`, do đó không cần cài đặt thêm package `insightface` từ PyPI. Module `arcface_model.py` sẽ import trực tiếp từ:
@@ -291,6 +295,8 @@ sys.path.append('[ĐỘI_DẪN_DỰ_ÁN]/insightface/recognition/arcface_torch')
 # Đặt file model vào thư mục model/
 # - glint360k_cosface_r18_fp16_0.1.pth
 # - ms1mv3_arcface_r18_fp16.pth
+# - ModelAge.pth (NEW - Age prediction model)
+# - ModelGender.pth (NEW - Gender prediction model)
 ## 🛡️ MySQL Authentication - Hướng Dẫn Sử Dụng
 
 ### **🔐 Authentication Flow**
@@ -623,8 +629,13 @@ if results and results[0]['score'] > 0.5:  # Tăng để giảm false positive
 ### Tùy chỉnh Model
 Thay đổi model trong `config.py`:
 ```python
-# Sử dụng model khác
+# Face recognition models
 MODEL_PATH = 'model/ms1mv3_arcface_r18_fp16.pth'
+BACKUP_MODEL_PATH = 'model/glint360k_cosface_r18_fp16_0.1.pth'
+
+# Age/Gender prediction models (NEW)
+AGE_MODEL = 'model/ModelAge.pth'
+GENDER_MODEL = 'model/ModelGender.pth'
 ```
 
 ## 🐛 Debug & Troubleshooting

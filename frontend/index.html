@@ -773,6 +773,98 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         padding: 20px;
       }
     }
+
+    /* Enhanced Logout Button with Smooth Animations */
+    .logout-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
+
+    .logout-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    }
+
+    .logout-btn:active {
+      transform: translateY(0) scale(1.02);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    }
+
+    .logout-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .logout-btn:hover::before {
+      left: 100%;
+    }
+
+    .logout-btn i {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .logout-btn:hover i {
+      transform: rotate(10deg) scale(1.1);
+    }
+
+    /* Pulse animation for logout button icon */
+    @keyframes logoutPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .logout-btn:hover i {
+      animation: logoutPulse 0.6s ease-in-out;
+    }
+
+    /* Enhanced User Chip */
+    .user-chip {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .user-chip:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    }
+
+    /* Enhanced Login Button */
+    .login-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+      background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    }
+
+    .login-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s;
+    }
+
+    .login-btn:hover::before {
+      left: 100%;
+    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
@@ -810,14 +902,14 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
   <!-- Navigation -->
   <nav class="fixed top-0 left-0 w-full z-30 bg-white border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between">
-      <div class="text-xl font-bold text-indigo-600 flex items-center gap-3">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center">
+      <div class="text-xl font-bold text-indigo-600 flex items-center gap-3 mr-8">
         <i class="fa-solid fa-robot text-3xl"></i>
         <span>Face Recognition</span>
       </div>
-      <div class="flex items-center gap-6">
-        <div class="flex items-center gap-1">
-        <!-- Tab buttons with enhanced design -->
+      
+      <!-- Tab buttons moved to left side -->
+      <div class="flex items-center gap-1 flex-1">
         <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('query', this)">
           <i class="fa-solid fa-magnifying-glass w-5 text-center"></i> 
           <span class="hidden md:inline">Detection</span> 
@@ -858,7 +950,10 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <span class="hidden md:inline">Reset</span> 
           <span class="tab-indicator"></span>
         </button>
-        </div>
+      </div>
+      
+      <!-- Auth area on the right -->
+      <div class="flex items-center gap-4 ml-auto">
         <div class="h-8 border-l border-gray-200"></div>
         <div class="flex gap-2" id="authNavArea">
           <!-- Nút đăng nhập/đăng ký hoặc username + đăng xuất sẽ được render bằng JS -->
@@ -920,7 +1015,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
     <!-- Predict Age/Gender Section -->
     <section id="predict" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
-      <h2 class="text-2xl font-bold text-purple-600 flex items-center gap-3">
+      <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
         <i class="fa-solid fa-user-clock"></i> 
         Dự đoán tuổi và giới tính
         <div class="tooltip">
@@ -929,7 +1024,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </div>
       </h2>
       <form id="predictForm" class="space-y-4">
-        <div class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-purple-500 transition-all" id="predictDropArea">
+        <div class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-all" id="predictDropArea">
             <label for="predictFile" class="file-input-label justify-center text-gray-500" id="predictFileLabel">
                 <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
                 <div class="ml-3">
@@ -939,7 +1034,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             </label>
             <input type="file" id="predictFile" accept="image/*" onchange="updateFileName('predictFile', 'predictFileName')" />
         </div>
-        <button type="button" class="w-full bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold text-base transition-colors" onclick="callPredict()">
+        <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold text-base transition-colors" onclick="callPredict()">
           <i class="fa-solid fa-magic-wand-sparkles mr-2"></i>Dự đoán tuổi và giới tính
         </button>
       </form>
@@ -948,7 +1043,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
     <!-- Add Section -->
     <section id="add" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
-      <h2 class="text-2xl font-bold text-green-600 flex items-center gap-3">
+      <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
         <i class="fa-solid fa-plus"></i> 
         Thêm người mới
         <div class="tooltip">
@@ -957,7 +1052,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </div>
       </h2>
       <form id="addForm" class="space-y-6">
-        <div id="addDropArea" class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-500 transition-all">
+        <div id="addDropArea" class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-all">
             <label for="addFile" class="file-input-label justify-center text-gray-500">
                 <i class="fa-solid fa-image text-3xl"></i>
                 <div class="ml-3">
@@ -998,11 +1093,11 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <span class="font-semibold text-gray-700 min-w-fit">Giới tính:</span>
           <div class="flex gap-6">
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="addGioitinh" value="1" class="text-green-600 focus:ring-green-500 w-4 h-4" checked> 
+              <input type="radio" name="addGioitinh" value="1" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" checked> 
               <span class="text-base">Nam</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="addGioitinh" value="0" class="text-green-600 focus:ring-green-500 w-4 h-4"> 
+              <input type="radio" name="addGioitinh" value="0" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4"> 
               <span class="text-base">Nữ</span>
             </label>
           </div>
@@ -1010,18 +1105,18 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div class="tooltip w-full">
-            <input type="number" id="addTuoi" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Tuổi (vd: 25)" min="1" max="120" oninput="validateAge('addTuoi')" />
+            <input type="number" id="addTuoi" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Tuổi (vd: 25)" min="1" max="120" oninput="validateAge('addTuoi')" />
             <div id="addTuoi-validation" class="validation-message"></div>
             <span class="tooltiptext">Tuổi hiện tại của người này. Chỉ chấp nhận số từ 1 đến 120.</span>
           </div>
           <div class="tooltip w-full">
-            <input type="text" id="addNoio" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Nơi ở (vd: Hà Nội, Việt Nam)" oninput="validateLocation('addNoio')" />
+            <input type="text" id="addNoio" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Nơi ở (vd: Hà Nội, Việt Nam)" oninput="validateLocation('addNoio')" />
             <div id="addNoio-validation" class="validation-message"></div>
             <span class="tooltiptext">Địa chỉ nơi ở hiện tại hoặc nơi làm việc của người này.</span>
           </div>
         </div>
         
-        <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="callAdd()">
+        <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="callAdd()">
           <i class="fa-solid fa-user-plus mr-2"></i>Thêm người mới
         </button>
       </form>
@@ -1030,7 +1125,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
     <!-- Edit Section -->
     <section id="edit" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
-      <h2 class="text-2xl font-bold text-yellow-600 flex items-center gap-3">
+      <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
         <i class="fa-solid fa-pen-to-square"></i> 
         Sửa thông tin
         <div class="tooltip">
@@ -1039,7 +1134,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </div>
       </h2>
       <form id="editForm" class="space-y-6">
-        <div id="editDropArea" class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-yellow-500 transition-all">
+        <div id="editDropArea" class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-all">
             <label for="editFile" class="file-input-label justify-center text-gray-500">
                 <i class="fa-solid fa-image text-3xl"></i>
                 <div class="ml-3">
@@ -1051,18 +1146,18 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </div>
         
         <div class="tooltip w-full">
-          <input type="text" id="editImageId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-base" placeholder="Nhập Image ID cần sửa (bắt buộc, vd: img_001)" required oninput="validateImageId('editImageId')" />
+          <input type="text" id="editImageId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Nhập Image ID cần sửa (bắt buộc, vd: img_001)" required oninput="validateImageId('editImageId')" />
           <div id="editImageId-validation" class="validation-message"></div>
           <span class="tooltiptext">Mã định danh của ảnh cần chỉnh sửa. Trường này bắt buộc phải nhập để xác định ảnh cần sửa đổi.</span>
         </div>
         
         <div class="tooltip w-full">
-          <input type="text" id="editImagePath" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-base" placeholder="Đường dẫn ảnh mới (tùy chọn, vd: images/new_path.jpg)" oninput="validatePath('editImagePath')" />
+          <input type="text" id="editImagePath" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Đường dẫn ảnh mới (tùy chọn, vd: images/new_path.jpg)" oninput="validatePath('editImagePath')" />
           <div id="editImagePath-validation" class="validation-message"></div>
           <span class="tooltiptext">Đường dẫn mới cho ảnh. Để trống nếu không muốn thay đổi đường dẫn hiện tại.</span>
         </div>
         
-        <button type="button" class="w-full bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="callEdit()">
+        <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="callEdit()">
           <i class="fa-solid fa-floppy-disk mr-2"></i>Cập nhật thông tin
         </button>
       </form>
@@ -1071,7 +1166,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
     <!-- Delete Section -->
     <section id="delete" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
-        <h2 class="text-2xl font-bold text-red-600 flex items-center gap-3">
+        <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
           <i class="fa-solid fa-trash-can"></i> 
           Xóa đối tượng
           <div class="tooltip">
@@ -1091,7 +1186,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <form id="deleteForm" class="space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                    <input type="radio" name="deleteType" value="embedding" class="text-red-600 focus:ring-red-500 w-4 h-4" checked onchange="toggleDeleteType()"> 
+                    <input type="radio" name="deleteType" value="embedding" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" checked onchange="toggleDeleteType()"> 
                     <div>
                       <span class="font-semibold text-gray-700">Xóa theo Embedding (Image ID)</span>
                       <div class="tooltip ml-1 inline-block">
@@ -1101,7 +1196,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                     </div>
                 </label>
                 <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
-                    <input type="radio" name="deleteType" value="class_id" class="text-red-600 focus:ring-red-500 w-4 h-4" onchange="toggleDeleteType()"> 
+                    <input type="radio" name="deleteType" value="class_id" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" onchange="toggleDeleteType()"> 
                     <div>
                       <span class="font-semibold text-gray-700">Xóa theo Class ID</span>
                       <div class="tooltip ml-1 inline-block">
@@ -1112,10 +1207,10 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                 </label>
             </div>
             
-            <input type="text" id="deleteImageId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-base" placeholder="Nhập Image ID cần xóa (vd: 1)" />
-            <input type="text" id="deleteClassId" class="w-full border-gray-300 rounded-lg px-4 py-3 hidden focus:ring-2 focus:ring-red-500 focus:border-red-500 text-base" placeholder="Nhập Class ID cần xóa (vd: 1)" />
+            <input type="text" id="deleteImageId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Nhập Image ID cần xóa (vd: 1)" />
+            <input type="text" id="deleteClassId" class="w-full border-gray-300 rounded-lg px-4 py-3 hidden focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Nhập Class ID cần xóa (vd: 1)" />
             
-            <button type="button" class="w-full bg-red-600 hover:bg-red-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="showDeleteConfirmation()">
+            <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="showDeleteConfirmation()">
               <i class="fa-solid fa-trash-can mr-2"></i>Xóa đối tượng
             </button>
         </form>
@@ -1155,7 +1250,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
     <!-- Search Nguoi Section -->
     <section id="searchNguoi" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
-      <h2 class="text-2xl font-bold text-gray-700 flex items-center gap-3">
+      <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
         <i class="fa-solid fa-users"></i> 
         Tìm kiếm người trong hệ thống
         <div class="tooltip">
@@ -1168,7 +1263,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <input type="text" id="searchNguoiInput" class="form-input w-full max-w-4xl border-gray-300 rounded-lg px-10 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg" style="min-width:400px;" placeholder="Tìm theo tên, nơi ở, tuổi... (vd: Nguyễn Văn, Hà Nội, 25). Để trống để hiển thị tất cả." />
           <span class="tooltiptext">Có thể tìm kiếm theo bất kỳ thông tin nào: tên, tuổi, giới tính, nơi ở. Hỗ trợ tìm kiếm mờ và không phân biệt hoa thường.</span>
         </div>
-        <button type="button" class="w-full bg-gray-700 hover:bg-gray-800 text-white px-6 py-3 rounded-lg font-semibold text-lg transition-colors" onclick="callSearchNguoi()">
+        <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold text-lg transition-colors" onclick="callSearchNguoi()">
           <i class="fa-solid fa-search mr-2"></i>Tìm kiếm người
         </button>
       </form>
@@ -1177,7 +1272,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
     <!-- Reset Section -->
     <section id="reset" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
-        <h2 class="text-2xl font-bold text-black flex items-center gap-3">
+        <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
           <i class="fa-solid fa-arrows-rotate"></i> 
           Reset Index
           <div class="tooltip">
@@ -1199,7 +1294,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             </div>
           </div>
         </div>
-        <button type="button" class="w-full bg-black hover:bg-gray-800 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="showResetConfirmation()">
+        <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-4 rounded-lg font-semibold text-lg transition-colors" onclick="showResetConfirmation()">
           <i class="fa-solid fa-bomb mr-2"></i>Reset toàn bộ hệ thống
         </button>
         <div id="resetResult"></div>
@@ -1284,18 +1379,33 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         if (isLoggedIn && username) {
           // Hiển thị username và nút đăng xuất
           const userSpan = document.createElement('span');
-          userSpan.className = 'px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-sm flex items-center gap-2';
+          userSpan.className = 'user-chip px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-sm flex items-center gap-2';
           userSpan.innerHTML = `<i class="fa-solid fa-user"></i> ${username}`;
 
           const logoutBtn = document.createElement('button');
-          logoutBtn.className = 'px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold text-sm transition flex items-center gap-2';
+          logoutBtn.className = 'logout-btn px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-sm transition flex items-center gap-2';
           logoutBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i>';
           logoutBtn.title = 'Đăng xuất';
           logoutBtn.onclick = function() {
-            sessionStorage.removeItem('username');
-            sessionStorage.removeItem('isLoggedIn');
-            sessionStorage.removeItem('authToken'); // Clear authentication token
-            renderAuthNav();
+            // Add click animation effect
+            logoutBtn.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+              logoutBtn.style.transform = '';
+            }, 150);
+            
+            // Show confirmation with animation
+            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+              // Add logout animation
+              logoutBtn.style.opacity = '0.5';
+              logoutBtn.style.transform = 'scale(0.9) rotate(360deg)';
+              
+              setTimeout(() => {
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('authToken'); // Clear authentication token
+                renderAuthNav();
+              }, 300);
+            }
           };
 
           authNavArea.appendChild(userSpan);
@@ -1303,7 +1413,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         } else {
           // Hiển thị nút đăng nhập
           const loginBtn = document.createElement('button');
-          loginBtn.className = 'px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition flex items-center gap-2';
+          loginBtn.className = 'login-btn px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition flex items-center gap-2';
           loginBtn.id = 'loginNavBtn';
           loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
           loginBtn.onclick = function() {
