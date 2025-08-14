@@ -5,6 +5,10 @@
 ### 🆕 Age/Gender Prediction API
 - **Added**: Public endpoint `POST /predict` cho phép dự đoán tuổi và giới tính từ ảnh khuôn mặt (không cần đăng nhập)
 - **Added**: Module `predict_service.py` và `api/predict.py` cho xử lý và expose API mới
+- **Added**: Hai AI models mới: `ModelAge.pth` và `ModelGender.pth` (ResNet-18 based)
+- **Added**: Dependencies mới: `torchvision` cho deep learning models
+- **Updated**: `config.py` với AGE_MODEL và GENDER_MODEL configuration
+- **Updated**: Frontend với tab "Age/Gender" và giao diện dự đoán đẹp mắt
 - **No Breaking Change**: Các API cũ vẫn giữ nguyên, không ảnh hưởng authentication
 
 ---

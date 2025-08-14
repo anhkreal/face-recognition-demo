@@ -36,6 +36,27 @@
 - **Authentication**: None required
 - **Description**: Trả về nhiều kết quả để lựa chọn
 
+#### POST `/predict`
+**Dự đoán tuổi và giới tính từ ảnh khuôn mặt**
+- **Input**: `image: UploadFile` (ảnh JPEG/PNG)
+- **Output**: 
+  - Nếu thành công: `{"pred_age": 27, "pred_gender": "Male"}`
+  - Nếu lỗi: `{"error": "Invalid image file"}`
+- **Authentication**: None required
+- **Description**: Upload ảnh khuôn mặt, API trả về tuổi và giới tính dự đoán. Không cần đăng nhập.
+- **Model**: Sử dụng ResNet-18 cho cả age và gender prediction
+- **Example (cURL)**:
+  ```bash
+  curl -X POST "http://localhost:8000/predict" -F "image=@test.jpg"
+  ```
+- **Example Response**:
+  ```json
+  {
+    "pred_age": 36,
+    "pred_gender": "Male"
+  }
+  ```
+
 ---
 
 ### 🧑‍🦱 Age/Gender Prediction Endpoint (Public)
