@@ -1,6 +1,15 @@
 # CHANGELOG - Face Recognition API với MySQL Authentication
 
-## [2.0.0] - 2025-08-13 🔐 MYSQL AUTHENTICATION MAJOR RELEASE
+## [0.2.1] - 2025-08-14 🆕 AGE/GENDER PREDICTION API
+
+### 🆕 Age/Gender Prediction API
+- **Added**: Public endpoint `POST /predict` cho phép dự đoán tuổi và giới tính từ ảnh khuôn mặt (không cần đăng nhập)
+- **Added**: Module `predict_service.py` và `api/predict.py` cho xử lý và expose API mới
+- **No Breaking Change**: Các API cũ vẫn giữ nguyên, không ảnh hưởng authentication
+
+---
+
+## [0.2.0] - 2025-08-13 🔐 MYSQL AUTHENTICATION MAJOR RELEASE
 
 ### 🔐 MySQL Authentication System - MAJOR CHANGE
 - **CHANGED** Authentication system từ JWT sang MySQL session-based
@@ -113,11 +122,31 @@
 
 ---
 
-## [2.0.0] - Previous Version (Pre-JWT)
-- Face recognition API với basic authentication
-- FAISS vector database integration
-- Health monitoring system
-- Performance optimization với singleton pattern
+## [0.1.2] - 2025-08-10
+- **Added**: Tích hợp FAISS vector database cho tìm kiếm khuôn mặt
+- **Added**: API nhận diện khuôn mặt cơ bản (POST /query)
+- **Added**: Health check endpoint (GET /health)
+- **Added**: Cấu trúc thư mục chuẩn cho backend và model
+- **Improved**: Hiệu năng truy vấn với singleton pattern
+
+## [0.1.1] - 2025-08-07
+- **Improved**: Tối ưu tốc độ nhận diện khuôn mặt với batch processing
+- **Added**: Logging chi tiết cho các API endpoint
+- **Fixed**: Sửa lỗi không nhận diện đúng với ảnh đầu vào kích thước lớn
+- **Added**: Thêm endpoint GET /list_nguoi để liệt kê danh sách người trong hệ thống
+- **Improved**: Cập nhật tài liệu hướng dẫn sử dụng API và ví dụ request/response
+- **Fixed**: Sửa lỗi kết nối MySQL không ổn định khi truy vấn liên tục
+
+## [0.1.0] - 2025-08-05
+- **Initial release**: Khởi tạo project nhận diện khuôn mặt
+- **Added**: Nhận diện khuôn mặt sử dụng ArcFace (POST /query)
+- **Added**: Kết nối MySQL cơ bản cho lưu thông tin người dùng
+- **Added**: API health check (GET /health)
+- **Added**: Cấu trúc thư mục backend chuẩn (app.py, model/, db/)
+- **Added**: Tài liệu cài đặt và hướng dẫn sử dụng ban đầu (README.md)
+- **Added**: Script import dữ liệu mẫu vào MySQL
+- **Added**: Đăng nhập cơ bản với username/password (chưa có token)
+- **Known Limitation**: Chưa có xác thực token, chưa có phân quyền, chưa tối ưu hiệu năng cho FAISS
 
 ---
 
