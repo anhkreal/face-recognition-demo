@@ -397,13 +397,27 @@ function callGetAllImages() {
     });
 }
 
+/**
+ * Start a new embedding search (always from page 1)
+ */
+function startNewEmbeddingSearch() {
+  console.log('🆕 Starting new embedding search from page 1');
+  callSearchEmbedding(1);
+}
+
 function callSearchEmbedding(page = 1) {
+  console.log(`🔍 callSearchEmbedding called with page: ${page}`);
+  
   const classId = document.getElementById('searchEmbeddingInput')?.value?.trim();
   const resultId = 'searchEmbeddingResult';
+  
+  console.log(`📝 Query: "${classId}", Page: ${page}`);
   
   // Update state
   embeddingSearchState.currentQuery = classId || '';
   embeddingSearchState.currentPage = page;
+  
+  console.log(`💾 Updated state - Page: ${embeddingSearchState.currentPage}, Query: "${embeddingSearchState.currentQuery}"`);
   
   // Show snackbar for starting process
   if (window.showSnackbar) {
@@ -420,7 +434,10 @@ function callSearchEmbedding(page = 1) {
   params.append('page', page);
   params.append('page_size', embeddingSearchState.pageSize);
   
-  fetch(`${window.API_CONFIG.host}/search_embeddings?${params.toString()}`, {
+  const url = `${window.API_CONFIG.host}/search_embeddings?${params.toString()}`;
+  console.log(`🌐 Calling API: ${url}`);
+  
+  fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json'
@@ -559,7 +576,10 @@ function createPaginationControls(type, state) {
               min="1" 
               max="${totalPages}" 
               value="${currentPage}"
-              onkeypress="if(event.key==='Enter') ${type === 'embedding' ? 'navigateEmbeddingPage' : 'navigateNguoiPage'}(parseInt(this.value))"
+              onfocus="this.select()"
+              onkeypress="if(event.key==='Enter') ${type === 'embedding' ? 'navigateEmbeddingPage' : 'navigateNguoiPage'}(parseInt(this.value) || ${currentPage})"
+              onchange="${type === 'embedding' ? 'navigateEmbeddingPage' : 'navigateNguoiPage'}(parseInt(this.value) || ${currentPage})"
+              onblur="if(!this.value || parseInt(this.value) < 1 || parseInt(this.value) > ${totalPages}) this.value = ${currentPage}"
               class="w-16 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
           </div>
         </div>
@@ -586,14 +606,66 @@ function createPaginationControls(type, state) {
 
 // Navigation functions
 function navigateEmbeddingPage(page) {
-  if (page >= 1 && page <= embeddingSearchState.totalPages) {
-    callSearchEmbedding(page);
+  console.log(`🎯 navigateEmbeddingPage called with page: ${page}`);
+  console.log(`🎯 Type of page: ${typeof page}`);
+  console.log(`🎯 Page value: ${page}, totalPages: ${embeddingSearchState.totalPages}`);
+  
+  // Validate page number
+  const pageNum = parseInt(page);
+  if (isNaN(pageNum)) {
+    console.log(`🎯 Invalid page number: ${page}`);
+    if (window.showSnackbar) {
+      window.showSnackbar('Số trang không hợp lệ', 'error');
+    }
+    return;
+  }
+  
+  if (pageNum >= 1 && pageNum <= embeddingSearchState.totalPages) {
+    console.log(`🎯 Calling callSearchEmbedding(${pageNum})`);
+    callSearchEmbedding(pageNum);
+  } else {
+    console.log(`🎯 Page ${pageNum} is out of range (1-${embeddingSearchState.totalPages})`);
+    if (window.showSnackbar) {
+      window.showSnackbar(`Trang phải từ 1 đến ${embeddingSearchState.totalPages}`, 'warning');
+    }
+    // Reset input value to current page
+    const inputs = document.querySelectorAll('input[type="number"]');
+    inputs.forEach(input => {
+      if (input.value != embeddingSearchState.currentPage) {
+        input.value = embeddingSearchState.currentPage;
+      }
+    });
   }
 }
 
 function navigateNguoiPage(page) {
-  if (page >= 1 && page <= nguoiSearchState.totalPages) {
-    callSearchNguoi(page);
+  console.log(`🎯 navigateNguoiPage called with page: ${page}`);
+  
+  // Validate page number
+  const pageNum = parseInt(page);
+  if (isNaN(pageNum)) {
+    console.log(`🎯 Invalid page number: ${page}`);
+    if (window.showSnackbar) {
+      window.showSnackbar('Số trang không hợp lệ', 'error');
+    }
+    return;
+  }
+  
+  if (pageNum >= 1 && pageNum <= nguoiSearchState.totalPages) {
+    console.log(`🎯 Calling callSearchNguoi(${pageNum})`);
+    callSearchNguoi(pageNum);
+  } else {
+    console.log(`🎯 Page ${pageNum} is out of range (1-${nguoiSearchState.totalPages})`);
+    if (window.showSnackbar) {
+      window.showSnackbar(`Trang phải từ 1 đến ${nguoiSearchState.totalPages}`, 'warning');
+    }
+    // Reset input value to current page
+    const inputs = document.querySelectorAll('input[type="number"]');
+    inputs.forEach(input => {
+      if (input.value != nguoiSearchState.currentPage) {
+        input.value = nguoiSearchState.currentPage;
+      }
+    });
   }
 }
 
@@ -649,3 +721,4 @@ function updatePaginationControls(type, currentPage, totalPages) {
 // Export helper functions
 window.togglePaginationControls = togglePaginationControls;
 window.updatePaginationControls = updatePaginationControls;
+window.startNewEmbeddingSearch = startNewEmbeddingSearch;

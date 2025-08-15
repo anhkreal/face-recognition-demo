@@ -980,46 +980,11 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <input type="text" id="searchEmbeddingInput" class="form-input w-full max-w-4xl border-gray-300 rounded-lg px-10 py-1.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg" style="min-width:400px;" placeholder="Nhập class_id cần tìm (ví dụ: 123). Để trống để hiển thị tất cả." />
           <span class="tooltiptext">Class ID là mã định danh duy nhất của mỗi người trong hệ thống. Có thể chứa chữ, số và dấu gạch dưới. Để trống để xem tất cả embedding.</span>
         </div>
-        <button type="button" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white px-6 py-3 rounded-lg font-semibold text-lg transition-colors" onclick="callSearchEmbedding()">
+        <button type="button" class="w-full bg-indigo-700 hover:bg-indigo-800 text-white px-6 py-3 rounded-lg font-semibold text-lg transition-colors" onclick="startNewEmbeddingSearch()">
           <i class="fa-solid fa-magnifying-glass mr-2"></i>Tìm kiếm
         </button>
       </form>
       <div id="searchEmbeddingResult"></div>
-      
-      <!-- Pagination Navigation for Embedding Search -->
-      <div id="embeddingPaginationControls" class="hidden">
-        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mt-4">
-          <!-- Left: Previous Button -->
-          <button id="embeddingPrevBtn" onclick="navigateEmbeddingPreviousPage()" 
-                  class="flex items-center gap-2 px-4 py-2 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            <i class="fas fa-chevron-left"></i>
-            <span>Trang trước</span>
-          </button>
-          
-          <!-- Center: Page Indicator and Input -->
-          <div class="flex items-center gap-4">
-            <span id="embeddingPageIndicator" class="text-gray-700 font-medium">Trang 1 / 1</span>
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-600">Đi tới:</span>
-              <input type="number" id="embeddingPageInput" min="1" 
-                     class="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
-                     onkeypress="if(event.key==='Enter') goToPage('embedding', this.value)"
-                     placeholder="1">
-              <button onclick="goToPage('embedding', document.getElementById('embeddingPageInput').value)"
-                      class="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors">
-                <i class="fas fa-arrow-right"></i>
-              </button>
-            </div>
-          </div>
-          
-          <!-- Right: Next Button -->
-          <button id="embeddingNextBtn" onclick="navigateEmbeddingNextPage()" 
-                  class="flex items-center gap-2 px-4 py-2 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            <span>Trang sau</span>
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
-      </div>
     </section>
     <!-- Query Section -->
     <section id="query" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
@@ -1304,41 +1269,6 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </button>
       </form>
       <div id="searchNguoiResult"></div>
-      
-      <!-- Pagination Navigation for People List -->
-      <div id="nguoiPaginationControls" class="hidden">
-        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mt-4">
-          <!-- Left: Previous Button -->
-          <button id="nguoiPrevBtn" onclick="navigatePreviousPage()" 
-                  class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            <i class="fas fa-chevron-left"></i>
-            <span>Trang trước</span>
-          </button>
-          
-          <!-- Center: Page Indicator and Input -->
-          <div class="flex items-center gap-4">
-            <span id="nguoiPageIndicator" class="text-gray-700 font-medium">Trang 1 / 1</span>
-            <div class="flex items-center gap-2">
-              <span class="text-sm text-gray-600">Đi tới:</span>
-              <input type="number" id="nguoiPageInput" min="1" 
-                     class="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
-                     onkeypress="if(event.key==='Enter') goToPage('nguoi', this.value)"
-                     placeholder="1">
-              <button onclick="goToPage('nguoi', document.getElementById('nguoiPageInput').value)"
-                      class="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors">
-                <i class="fas fa-arrow-right"></i>
-              </button>
-            </div>
-          </div>
-          
-          <!-- Right: Next Button -->
-          <button id="nguoiNextBtn" onclick="navigateNextPage()" 
-                  class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-            <span>Trang sau</span>
-            <i class="fas fa-chevron-right"></i>
-          </button>
-        </div>
-      </div>
     </section>
 
     <!-- Reset Section -->
