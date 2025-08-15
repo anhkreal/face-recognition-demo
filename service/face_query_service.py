@@ -36,8 +36,8 @@ async def query_face_service(file: UploadFile = File(...)):
     
     print(f'Results: {results}')
     print(f'Tổng thời gian xử lý: {time.time() - start_total:.3f}s')
-    # Threshold 0.43 chosen based on model validation: scores above 0.43 indicate a confident match.
-    if results and results[0]['score'] > 0.43:
+    # Threshold 0.45 chosen based on model validation: scores above 0.45 indicate a confident match.
+    if results and results[0]['score'] > 0.45:
         print('Trả về thông tin top1')
         class_id = str(results[0]['class_id'])
         try:
@@ -55,5 +55,5 @@ async def query_face_service(file: UploadFile = File(...)):
             resp['nguoi'] = nguoi.to_dict()
         return resp
     else:
-        print('Không có kết quả phù hợp (score <= 0.43)')
+        print('Không có kết quả phù hợp (score <= 0.45)')
         return {}

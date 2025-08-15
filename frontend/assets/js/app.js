@@ -278,15 +278,15 @@ function callDeleteImage() {
 }
 
 // Search page functions
-function callSearchNguoi() {
+function callSearchNguoi(page = 1) {
   if (window.SearchPage && window.SearchPage.callSearchNguoi) {
-    window.SearchPage.callSearchNguoi();
+    window.SearchPage.callSearchNguoi(page);
   }
 }
 
-function callGetAllNguoi() {
+function callGetAllNguoi(page = 1) {
   if (window.SearchPage && window.SearchPage.callGetAllNguoi) {
-    window.SearchPage.callGetAllNguoi();
+    window.SearchPage.callGetAllNguoi(page);
   }
 }
 
@@ -296,9 +296,9 @@ function callGetAllImages() {
   }
 }
 
-function callSearchEmbedding() {
+function callSearchEmbedding(page = 1) {
   if (window.SearchPage && window.SearchPage.callSearchEmbedding) {
-    window.SearchPage.callSearchEmbedding();
+    window.SearchPage.callSearchEmbedding(page);
   }
 }
 
@@ -332,30 +332,30 @@ window.MainApp = {
  * Navigate to previous page for people list
  */
 function navigatePreviousPage() {
+  console.log('⬅️ navigatePreviousPage called');
+  
   if (!window.nguoiSearchState) {
     console.warn('nguoiSearchState not found');
     return;
   }
   
   const currentPage = window.nguoiSearchState.currentPage;
+  console.log(`⬅️ Current page: ${currentPage}`);
+  
   if (currentPage > 1) {
     const newPage = currentPage - 1;
+    console.log(`⬅️ Navigating to page: ${newPage}`);
     
     // Call appropriate search function based on current query
     if (window.nguoiSearchState.currentQuery) {
+      console.log(`⬅️ Calling callSearchNguoi(${newPage}) with query`);
       callSearchNguoi(newPage);
     } else {
+      console.log(`⬅️ Calling callGetAllNguoi(${newPage}) without query`);
       callGetAllNguoi(newPage);
     }
-    
-    // Update page indicator
-    updatePageIndicator('nguoi', newPage, window.nguoiSearchState.totalPages);
-    
-    // Show navigation feedback
-    if (window.showSnackbar) {
-      window.showSnackbar(`Đã chuyển đến trang ${newPage}`, 'info');
-    }
   } else {
+    console.log('⬅️ Already at first page');
     // Already at first page
     if (window.showSnackbar) {
       window.showSnackbar('Đã ở trang đầu tiên', 'warning');
@@ -367,6 +367,8 @@ function navigatePreviousPage() {
  * Navigate to next page for people list
  */
 function navigateNextPage() {
+  console.log('➡️ navigateNextPage called');
+  
   if (!window.nguoiSearchState) {
     console.warn('nguoiSearchState not found');
     return;
@@ -375,24 +377,22 @@ function navigateNextPage() {
   const currentPage = window.nguoiSearchState.currentPage;
   const totalPages = window.nguoiSearchState.totalPages;
   
+  console.log(`📊 Current: ${currentPage}, Total: ${totalPages}`);
+  
   if (currentPage < totalPages) {
     const newPage = currentPage + 1;
+    console.log(`➡️ Navigating to page: ${newPage}`);
     
     // Call appropriate search function based on current query
     if (window.nguoiSearchState.currentQuery) {
+      console.log(`➡️ Calling callSearchNguoi(${newPage}) with query`);
       callSearchNguoi(newPage);
     } else {
+      console.log(`➡️ Calling callGetAllNguoi(${newPage}) without query`);
       callGetAllNguoi(newPage);
     }
-    
-    // Update page indicator
-    updatePageIndicator('nguoi', newPage, totalPages);
-    
-    // Show navigation feedback
-    if (window.showSnackbar) {
-      window.showSnackbar(`Đã chuyển đến trang ${newPage}`, 'info');
-    }
   } else {
+    console.log('➡️ Already at last page');
     // Already at last page
     if (window.showSnackbar) {
       window.showSnackbar('Đã ở trang cuối cùng', 'warning');
@@ -404,24 +404,22 @@ function navigateNextPage() {
  * Navigate to previous page for embedding search
  */
 function navigateEmbeddingPreviousPage() {
+  console.log('⬅️ navigateEmbeddingPreviousPage called');
+  
   if (!window.embeddingSearchState) {
     console.warn('embeddingSearchState not found');
     return;
   }
   
   const currentPage = window.embeddingSearchState.currentPage;
+  console.log(`⬅️ Current page: ${currentPage}`);
+  
   if (currentPage > 1) {
     const newPage = currentPage - 1;
+    console.log(`⬅️ Calling callSearchEmbedding with page: ${newPage}`);
     callSearchEmbedding(newPage);
-    
-    // Update page indicator
-    updatePageIndicator('embedding', newPage, window.embeddingSearchState.totalPages);
-    
-    // Show navigation feedback
-    if (window.showSnackbar) {
-      window.showSnackbar(`Đã chuyển đến trang ${newPage}`, 'info');
-    }
   } else {
+    console.log('⬅️ Already at first page');
     if (window.showSnackbar) {
       window.showSnackbar('Đã ở trang đầu tiên', 'warning');
     }
@@ -432,6 +430,8 @@ function navigateEmbeddingPreviousPage() {
  * Navigate to next page for embedding search
  */
 function navigateEmbeddingNextPage() {
+  console.log('🔄 navigateEmbeddingNextPage called');
+  
   if (!window.embeddingSearchState) {
     console.warn('embeddingSearchState not found');
     return;
@@ -440,18 +440,14 @@ function navigateEmbeddingNextPage() {
   const currentPage = window.embeddingSearchState.currentPage;
   const totalPages = window.embeddingSearchState.totalPages;
   
+  console.log(`📊 Current: ${currentPage}, Total: ${totalPages}`);
+  
   if (currentPage < totalPages) {
     const newPage = currentPage + 1;
+    console.log(`➡️ Calling callSearchEmbedding with page: ${newPage}`);
     callSearchEmbedding(newPage);
-    
-    // Update page indicator
-    updatePageIndicator('embedding', newPage, totalPages);
-    
-    // Show navigation feedback
-    if (window.showSnackbar) {
-      window.showSnackbar(`Đã chuyển đến trang ${newPage}`, 'info');
-    }
   } else {
+    console.log('➡️ Already at last page');
     if (window.showSnackbar) {
       window.showSnackbar('Đã ở trang cuối cùng', 'warning');
     }
