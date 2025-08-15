@@ -5,147 +5,859 @@
 ### 🔐 Authentication Endpoints
 
 #### POST `/auth/login`
+**Route**: `POST http://localhost:8000/auth/login`
 **Đăng nhập với MySQL account**
-- **Input**: `{"username": "string", "password": "string"}`
-- **Output**: `{"success": true, "token": "session_token", "username": "string"}`
-- **Authentication**: None required
-- **Description**: Đăng nhập bằng tài khoản trong bảng `taikhoan` MySQL
+
+**Request Body**: Form-data
+```
+username: "admin"
+password: "password123"
+```
+
+**Response Examples**:
+
+✅ **Success Case**:
+```json
+{
+  "success": true,
+  "message": "Đăng nhập thành công với user admin",
+  "username": "admin", 
+  "token": "session_token_string_here"
+}
+```
+
+❌ **Invalid Credentials**:
+```json
+{
+  "detail": "Sai username hoặc password",
+  "status_code": 401
+}
+```
+
+---
 
 #### POST `/auth/logout`
+**Route**: `POST http://localhost:8000/auth/logout`
 **Đăng xuất và clear session**
-- **Input**: None
-- **Output**: `{"success": true, "message": "Đăng xuất thành công"}`
-- **Authentication**: Bearer token required
-- **Description**: Kết thúc session và invalidate token
+
+**Headers Required**:
+```
+Authorization: Bearer session_token_string
+```
+
+**Response Examples**:
+
+✅ **Success Case**:
+```json
+{
+  "success": true,
+  "message": "User admin đã đăng xuất"
+}
+```
+
+❌ **No Token**:
+```json
+{
+  "detail": "Authentication required",
+  "status_code": 401
+}
+```
 
 ---
 
 ### 🔍 Face Recognition Endpoints (Public)
 
 #### POST `/query`
+**Route**: `POST http://localhost:8000/query`
 **Nhận diện khuôn mặt từ ảnh**
-- **Input**: `file: UploadFile` (ảnh JPEG/PNG)
-- **Output**: Thông tin người được nhận diện hoặc "Không tìm thấy"
-- **Authentication**: None required
-- **Description**: Upload ảnh và tìm người tương tự nhất trong database
+
+**Request**: Multipart form-data
+```
+image: [image file] (JPEG/PNG/WEBP)
+```
+
+**Response Examples**:
+
+✅ **Found Match** (score > 0.5):
+```json
+{
+  "image_id": 12345,
+  "image_path": "casia-webface/000042/001.jpg",
+  "class_id": "42",
+  "score": 0.89,
+  "nguoi": {
+    "class_id": 42,
+    "ten": "Nguyễn Văn An",
+    "tuoi": 28,
+    "gioitinh": "Nam",
+    "noio": "Hà Nội"
+  }
+}
+```
+
+✅ **No Match Found** (score <= 0.5):
+```json
+{}
+```
+
+❌ **Invalid Image**:
+```json
+{
+  "error": "Lỗi: Không decode được ảnh!",
+  "status_code": 400
+}
+```
+
+---
 
 #### POST `/query_top5`
+**Route**: `POST http://localhost:8000/query_top5`
 **Top 5 kết quả nhận diện**
-- **Input**: `file: UploadFile` (ảnh JPEG/PNG)
-- **Output**: Danh sách 5 người giống nhất với độ tin cậy
-- **Authentication**: None required
-- **Description**: Trả về nhiều kết quả để lựa chọn
 
-#### POST `/predict`
-**Dự đoán tuổi và giới tính từ ảnh khuôn mặt**
-- **Input**: `image: UploadFile` (ảnh JPEG/PNG)
-- **Output**: 
-  - Nếu thành công: `{"pred_age": 27, "pred_gender": "Male"}`
-  - Nếu lỗi: `{"error": "Invalid image file"}`
-- **Authentication**: None required
-- **Description**: Upload ảnh khuôn mặt, API trả về tuổi và giới tính dự đoán. Không cần đăng nhập.
-- **Model**: Sử dụng ResNet-18 cho cả age và gender prediction
-- **Example (cURL)**:
-  ```bash
-  curl -X POST "http://localhost:8000/predict" -F "image=@test.jpg"
-  ```
-- **Example Response**:
-  ```json
-  {
-    "pred_age": 36,
-    "pred_gender": "Male"
-  }
-  ```
+**Request**: Multipart form-data
+```
+file: [image file] (JPEG/PNG/WEBP)
+```
+
+**Response Examples**:
+
+✅ **Multiple Matches Found**:
+```json
+{
+  "success": true,
+  "message": "Tìm thấy 5 kết quả phù hợp nhất",
+  "results": [
+    {
+      "rank": 1,
+      "class_id": 42,
+      "ten": "Nguyễn Văn An",
+      "tuoi": 28,
+      "gioitinh": "Nam", 
+      "noio": "Hà Nội",
+      "similarity": 0.89,
+      "confidence": "high"
+    },
+    {
+      "rank": 2,
+      "class_id": 17,
+      "ten": "Trần Thị Bình",
+      "tuoi": 25,
+      "gioitinh": "Nữ",
+      "noio": "TP.HCM", 
+      "similarity": 0.76,
+      "confidence": "medium"
+    },
+    {
+      "rank": 3,
+      "class_id": 91,
+      "ten": "Lê Văn Cường",
+      "tuoi": 32,
+      "gioitinh": "Nam",
+      "noio": "Đà Nẵng",
+      "similarity": 0.68,
+      "confidence": "medium"
+    },
+    {
+      "rank": 4,
+      "class_id": 156,
+      "ten": "Phạm Thị Dung",
+      "tuoi": 29,
+      "gioitinh": "Nữ",
+      "noio": "Cần Thơ",
+      "similarity": 0.61,
+      "confidence": "low"
+    },
+    {
+      "rank": 5,
+      "class_id": 203,
+      "ten": "Hoàng Văn Em",
+      "tuoi": 35,
+      "gioitinh": "Nam",
+      "noio": "Hải Phòng",
+      "similarity": 0.55,
+      "confidence": "low"
+    }
+  ],
+  "total_candidates": 1250,
+  "processing_time": 2.15,
+  "face_detected": true
+}
+```
+
+✅ **Few Matches Found**:
+```json
+{
+  "success": true,
+  "message": "Chỉ tìm thấy 2 kết quả phù hợp",
+  "results": [
+    {
+      "rank": 1,
+      "class_id": 88,
+      "ten": "Võ Thị Giang",
+      "tuoi": 22,
+      "gioitinh": "Nữ",
+      "noio": "Nha Trang", 
+      "similarity": 0.72,
+      "confidence": "medium"
+    },
+    {
+      "rank": 2,
+      "class_id": 134,
+      "ten": "Đặng Văn Hùng",
+      "tuoi": 27,
+      "gioitinh": "Nam",
+      "noio": "Huế",
+      "similarity": 0.59,
+      "confidence": "low"
+    }
+  ],
+  "total_candidates": 1250,
+  "processing_time": 1.89
+}
+```
 
 ---
 
-### 🧑‍🦱 Age/Gender Prediction Endpoint (Public)
-
 #### POST `/predict`
+**Route**: `POST http://localhost:8000/predict`
 **Dự đoán tuổi và giới tính từ ảnh khuôn mặt**
-- **Input**: `file: UploadFile` (ảnh JPEG/PNG)
-- **Output**: 
-  - Nếu thành công: `{"success": true, "age": 27, "gender": "male", "message": "OK"}`
-  - Nếu lỗi: `{"success": false, "message": "Không nhận diện được khuôn mặt"}`
-- **Authentication**: None required
-- **Description**: Upload ảnh khuôn mặt, API trả về tuổi và giới tính dự đoán. Không cần đăng nhập.
-- **Example (cURL)**:
-  ```bash
-  curl -X POST "http://localhost:8000/predict" -F "file=@test.jpg"
-  ```
+
+**Request**: Multipart form-data
+```
+image: [image file] (JPEG/PNG/WEBP)
+```
+
+**Response Examples**:
+
+✅ **Successful Prediction**:
+```json
+{
+  "pred_age": 27,
+  "pred_gender": "Male"
+}
+```
+
+❌ **Model Not Loaded**:
+```json
+{
+  "error": "Model not loaded",
+  "status_code": 500
+}
+```
+
+❌ **Invalid Image**:
+```json
+{
+  "error": "Invalid image file", 
+  "status_code": 400
+}
+```
 
 ---
 
-### 🔒 Data Management Endpoints (Protected)
+### 🔒 Protected Data Management Endpoints
+
+**Note**: All endpoints below require authentication via Bearer token in header.
 
 #### POST `/add_embedding`
+**Route**: `POST http://localhost:8000/add_embedding`
 **Thêm người mới vào hệ thống**
-- **Input**: 
-  - `file: UploadFile` (ảnh khuôn mặt)
-  - `ten_nguoi: str`
-  - `tuoi: int`
-  - `gioi_tinh: str`
-  - `noi_o: str`
-- **Output**: `{"success": true, "class_id": 123, "message": "..."}`
-- **Authentication**: Bearer token required
-- **Description**: Thêm người mới với thông tin cá nhân
 
-#### PUT `/edit_embedding`
-**Chỉnh sửa thông tin người**
-- **Input**: `class_id`, các field muốn update
-- **Output**: `{"success": true, "message": "Cập nhật thành công"}`
-- **Authentication**: Bearer token required
-- **Description**: Sửa thông tin người đã có trong hệ thống
+**Headers Required**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+```
 
-#### DELETE `/delete_class`
-**Xóa toàn bộ thông tin người**
-- **Input**: `{"class_id": 123}`
-- **Output**: `{"success": true, "message": "Đã xóa class_id"}`
-- **Authentication**: Bearer token required
-- **Description**: Xóa vĩnh viễn tất cả dữ liệu của một người
+**Request**: Multipart form-data
+```
+file: [image file] (JPEG/PNG/WEBP)
+ten: "Nguyễn Văn A"
+tuoi: 25
+gioitinh: "Nam"  
+noio: "Hà Nội"
+```
 
-#### DELETE `/delete_image`
-**Xóa ảnh cụ thể**
-- **Input**: `{"image_id": "path/to/image.jpg"}`
-- **Output**: `{"success": true, "message": "Đã xóa ảnh"}`
-- **Authentication**: Bearer token required
-- **Description**: Xóa một ảnh cụ thể của người
+**Response Examples**:
 
-#### POST `/reset_index`
-**Reset toàn bộ FAISS index**
-- **Input**: None
-- **Output**: `{"success": true, "message": "FAISS index đã được reset"}`
-- **Authentication**: Bearer token required
-- **Description**: ⚠️ NGUY HIỂM - Xóa toàn bộ dữ liệu vector
+✅ **Successfully Added**:
+```json
+{
+  "success": true,
+  "message": "Thêm người thành công",
+  "person": {
+    "class_id": 1251,
+    "ten": "Nguyễn Văn A",
+    "tuoi": 25,
+    "gioitinh": "Nam",
+    "noio": "Hà Nội",
+    "created_at": "2024-01-15T10:30:00Z"
+  },
+  "embedding_added": true,
+  "total_people": 1251
+}
+```
+
+❌ **Validation Error**:
+```json
+{
+  "success": false,
+  "error": "Invalid age",
+  "message": "Tuổi phải nằm trong khoảng 1-120",
+  "field": "tuoi",
+  "value": 150
+}
+```
+
+❌ **Face Detection Failed**:
+```json
+{
+  "success": false,
+  "error": "No face detected",
+  "message": "Không phát hiện khuôn mặt trong ảnh. Vui lòng upload ảnh khác",
+  "face_detected": false
+}
+```
+
+❌ **Unauthorized**:
+```json
+{
+  "success": false,
+  "error": "Authentication failed",
+  "message": "Token không hợp lệ hoặc đã hết hạn",
+  "code": 401
+}
+```
 
 ---
 
-### 📊 System Information Endpoints (Public)
+#### PUT `/edit_embedding`
+**Route**: `PUT http://localhost:8000/edit_embedding`
+**Chỉnh sửa thông tin người**
+
+**Headers Required**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: multipart/form-data
+```
+
+**Request**: Multipart form-data
+```
+class_id: 42
+ten: "Nguyễn Văn An" (optional)
+tuoi: 29 (optional)
+gioitinh: "Nam" (optional)
+noio: "TP.HCM" (optional)
+file: [new image file] (optional, JPEG/PNG/WEBP)
+```
+
+**Response Examples**:
+
+✅ **Successfully Updated**:
+```json
+{
+  "success": true,
+  "message": "Cập nhật thông tin thành công",
+  "person": {
+    "class_id": 42,
+    "ten": "Nguyễn Văn An",
+    "tuoi": 29,
+    "gioitinh": "Nam",
+    "noio": "TP.HCM",
+    "updated_at": "2024-01-15T11:45:00Z"
+  },
+  "embedding_updated": true,
+  "fields_changed": ["tuoi", "noio", "face_embedding"]
+}
+```
+
+✅ **Info Only Update**:
+```json
+{
+  "success": true,
+  "message": "Cập nhật thông tin cá nhân thành công",
+  "person": {
+    "class_id": 42,
+    "ten": "Nguyễn Văn An",
+    "tuoi": 29,
+    "gioitinh": "Nam",
+    "noio": "TP.HCM"
+  },
+  "embedding_updated": false,
+  "fields_changed": ["tuoi", "noio"]
+}
+```
+
+❌ **Person Not Found**:
+```json
+{
+  "success": false,
+  "error": "Person not found",
+  "message": "Không tìm thấy người với ID: 999",
+  "class_id": 999
+}
+```
+
+❌ **No Fields to Update**:
+```json
+{
+  "success": false,
+  "error": "No fields to update",
+  "message": "Không có thông tin nào được thay đổi"
+}
+```
+
+---
+
+#### DELETE `/delete_class/{class_id}`
+**Route**: `DELETE http://localhost:8000/delete_class/42`
+**Xóa hoàn toàn một người khỏi hệ thống**
+
+**Headers Required**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Path Parameters**:
+```
+class_id: integer (required)
+```
+
+**Response Examples**:
+
+✅ **Successfully Deleted**:
+```json
+{
+  "success": true,
+  "message": "Xóa người thành công",
+  "deleted_person": {
+    "class_id": 42,
+    "ten": "Nguyễn Văn An",
+    "tuoi": 28,
+    "gioitinh": "Nam",
+    "noio": "Hà Nội"
+  },
+  "images_deleted": 5,
+  "embedding_removed": true,
+  "remaining_people": 1249
+}
+```
+
+❌ **Person Not Found**:
+```json
+{
+  "success": false,
+  "error": "Person not found",
+  "message": "Không tìm thấy người với ID: 999",
+  "class_id": 999
+}
+```
+
+❌ **Database Error**:
+```json
+{
+  "success": false,
+  "error": "Database error",
+  "message": "Lỗi khi xóa dữ liệu từ database",
+  "details": "Foreign key constraint failed"
+}
+```
+
+---
+
+#### DELETE `/delete_image`
+**Route**: `DELETE http://localhost:8000/delete_image`
+**Xóa một ảnh cụ thể của người**
+
+**Headers Required**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "class_id": 42,
+  "image_path": "casia-webface/000042/003.jpg"
+}
+```
+
+**Response Examples**:
+
+✅ **Successfully Deleted**:
+```json
+{
+  "success": true,
+  "message": "Xóa ảnh thành công",
+  "deleted_image": {
+    "class_id": 42,
+    "image_path": "casia-webface/000042/003.jpg",
+    "file_size": "45.2KB"
+  },
+  "remaining_images": 4,
+  "embedding_updated": true
+}
+```
+
+❌ **Image Not Found**:
+```json
+{
+  "success": false,
+  "error": "Image not found",
+  "message": "Không tìm thấy ảnh: casia-webface/000042/003.jpg"
+}
+```
+
+❌ **Last Image Protection**:
+```json
+{
+  "success": false,
+  "error": "Cannot delete last image",
+  "message": "Không thể xóa ảnh cuối cùng của người này",
+  "remaining_images": 1
+}
+```
+
+---
+
+#### POST `/reset_index`
+**Route**: `POST http://localhost:8000/reset_index`
+**Reset toàn bộ FAISS index và database**
+
+**Headers Required**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Request Body** (optional):
+```json
+{
+  "confirm": true,
+  "backup": true
+}
+```
+
+**Response Examples**:
+
+✅ **Successfully Reset**:
+```json
+{
+  "success": true,
+  "message": "Reset hệ thống thành công",
+  "operations": {
+    "faiss_index_cleared": true,
+    "database_truncated": true,
+    "backup_created": true,
+    "backup_path": "/backups/backup_2024-01-15_11-30-00.sql"
+  },
+  "statistics": {
+    "people_removed": 1250,
+    "embeddings_cleared": 1250,
+    "images_processed": 0
+  },
+  "reset_time": "2024-01-15T11:30:00Z"
+}
+```
+
+❌ **Confirmation Required**:
+```json
+{
+  "success": false,
+  "error": "Confirmation required",
+  "message": "Cần xác nhận để thực hiện reset (confirm: true)",
+  "warning": "Thao tác này sẽ xóa toàn bộ dữ liệu!"
+}
+```
+
+❌ **Backup Failed**:
+```json
+{
+  "success": false,
+  "error": "Backup failed",
+  "message": "Không thể tạo backup trước khi reset",
+  "details": "Insufficient disk space"
+}
+```
+
+---
+
+### 📊 System Information Endpoints
 
 #### GET `/list_nguoi`
-**Danh sách người trong hệ thống**
-- **Input**: Query parameters cho tìm kiếm và phân trang
-- **Output**: Danh sách người với thông tin chi tiết
-- **Authentication**: None required
-- **Description**: Xem và tìm kiếm người trong database
+**Route**: `GET http://localhost:8000/list_nguoi?query=&page=1&page_size=15`
+**Lấy danh sách tất cả người trong hệ thống**
+
+**Query Parameters**:
+```
+query: string (default: "") - Từ khóa tìm kiếm theo tên
+page: integer (default: 1) - Số trang hiện tại
+page_size: integer (default: 15, max: 100) - Số lượng kết quả mỗi trang
+```
+
+**Response Examples**:
+
+✅ **With Results**:
+```json
+{
+  "results": {
+    "nguoi_list": [
+      {
+        "class_id": 1,
+        "ten": "Nguyễn Văn An",
+        "tuoi": 28,
+        "gioitinh": "Nam",
+        "noio": "Hà Nội"
+      },
+      {
+        "class_id": 2,
+        "ten": "Trần Thị Bình",
+        "tuoi": 25,
+        "gioitinh": "Nữ",
+        "noio": "TP.HCM"
+      }
+    ],
+    "total": 1250
+  }
+}
+```
+
+❌ **Error**:
+```json
+{
+  "error": "Database connection failed"
+}
+```
+
+---
 
 #### GET `/vector_info`
-**Thông tin FAISS vector database**
-- **Output**: Thống kê về số lượng vectors, kích thước index
-- **Authentication**: None required
-- **Description**: Thông tin kỹ thuật về vector database
+**Route**: `GET http://localhost:8000/vector_info`
+**Thông tin về FAISS vector index**
+
+**Headers Required**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response Examples**:
+
+✅ **Index Available**:
+```json
+{
+  "success": true,
+  "index_info": {
+    "total_vectors": 1250,
+    "vector_dimension": 512,
+    "index_type": "IndexFlatIP",
+    "memory_usage": "2.5MB",
+    "last_updated": "2024-01-15T11:30:00Z"
+  },
+  "statistics": {
+    "average_similarity": 0.73,
+    "min_similarity": 0.21,
+    "max_similarity": 0.98,
+    "unique_classes": 1250
+  },
+  "performance": {
+    "search_time_avg": "15ms",
+    "build_time": "45s",
+    "queries_today": 247
+  }
+}
+```
+
+❌ **Index Not Available**:
+```json
+{
+  "success": false,
+  "error": "Index not initialized",
+  "message": "FAISS index chưa được khởi tạo",
+  "suggestion": "Hãy thêm người đầu tiên để khởi tạo index"
+}
+```
+
+---
 
 #### GET `/index_status`
-**Trạng thái hệ thống**
-- **Output**: Tình trạng FAISS index, performance metrics
-- **Authentication**: None required
-- **Description**: Kiểm tra sức khỏe của hệ thống
+**Route**: `GET http://localhost:8000/index_status`
+**Trạng thái chi tiết của FAISS index**
+
+**Headers Required**:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response Examples**:
+
+✅ **Healthy Index**:
+```json
+{
+  "success": true,
+  "status": "healthy",
+  "details": {
+    "index_size": 1250,
+    "is_trained": true,
+    "dimension": 512,
+    "metric_type": "METRIC_INNER_PRODUCT",
+    "memory_usage_bytes": 2621440,
+    "last_build_time": "2024-01-15T11:30:00Z"
+  },
+  "health_checks": {
+    "can_search": true,
+    "can_add": true,
+    "dimension_consistent": true,
+    "memory_available": true
+  },
+  "recommendations": []
+}
+```
+
+⚠️ **Warning Status**:
+```json
+{
+  "success": true,
+  "status": "warning",
+  "details": {
+    "index_size": 1250,
+    "is_trained": true,
+    "dimension": 512,
+    "metric_type": "METRIC_INNER_PRODUCT",
+    "memory_usage_bytes": 2621440
+  },
+  "health_checks": {
+    "can_search": true,
+    "can_add": true,
+    "dimension_consistent": true,
+    "memory_available": false
+  },
+  "warnings": ["High memory usage detected"],
+  "recommendations": ["Consider optimizing index or adding more memory"]
+}
+```
+
+❌ **Error Status**:
+```json
+{
+  "success": false,
+  "status": "error",
+  "error": "Index corrupted",
+  "message": "FAISS index bị lỗi và cần được rebuild",
+  "recommendations": ["Backup current data", "Rebuild index from database"]
+}
+```
+
+---
 
 #### GET `/health`
-**Health check cơ bản**
-- **Output**: `{"status": "healthy", "timestamp": "..."}`
-- **Authentication**: None required
-- **Description**: Kiểm tra API có hoạt động không
+**Route**: `GET http://localhost:8000/health`
+**Health check cho toàn bộ hệ thống**
+
+**Authentication**: None required
+
+**Response Examples**:
+
+✅ **All Systems Healthy**:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-15T12:00:00Z",
+  "services": {
+    "api": {
+      "status": "up",
+      "response_time": "2ms"
+    },
+    "database": {
+      "status": "up",
+      "connection_pool": "8/10 active",
+      "response_time": "5ms"
+    },
+    "faiss_index": {
+      "status": "up", 
+      "total_vectors": 1250,
+      "last_updated": "2024-01-15T11:30:00Z"
+    },
+    "face_recognition": {
+      "status": "up",
+      "model_loaded": true,
+      "gpu_available": true
+    },
+    "age_gender_prediction": {
+      "status": "up",
+      "model_loaded": true,
+      "last_prediction": "2024-01-15T11:58:00Z"
+    }
+  },
+  "system_info": {
+    "uptime": "5 days, 14 hours",
+    "memory_usage": "2.1GB / 8GB",
+    "cpu_usage": "15%",
+    "disk_usage": "45% of 100GB"
+  }
+}
+```
+
+⚠️ **Degraded Performance**:
+```json
+{
+  "status": "degraded",
+  "timestamp": "2024-01-15T12:00:00Z",
+  "services": {
+    "api": {
+      "status": "up",
+      "response_time": "25ms"
+    },
+    "database": {
+      "status": "up",
+      "connection_pool": "10/10 active",
+      "response_time": "45ms",
+      "warning": "High connection usage"
+    },
+    "faiss_index": {
+      "status": "up",
+      "total_vectors": 1250,
+      "warning": "High memory usage"
+    },
+    "face_recognition": {
+      "status": "up",
+      "model_loaded": true,
+      "gpu_available": false,
+      "warning": "Running on CPU only"
+    }
+  },
+  "warnings": [
+    "Database connection pool at maximum",
+    "GPU not available, using CPU for face recognition",
+    "High memory usage detected"
+  ]
+}
+```
+
+❌ **System Error**:
+```json
+{
+  "status": "error",
+  "timestamp": "2024-01-15T12:00:00Z",
+  "services": {
+    "api": {
+      "status": "up"
+    },
+    "database": {
+      "status": "down",
+      "error": "Connection timeout",
+      "last_successful": "2024-01-15T11:45:00Z"
+    },
+    "faiss_index": {
+      "status": "error",
+      "error": "Index not loaded"
+    }
+  },
+  "errors": [
+    "Database connection failed",
+    "FAISS index not available"
+  ]
+}
+```
 
 ---
 
