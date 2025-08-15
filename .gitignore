@@ -59,11 +59,9 @@ index/*.npz
 !index/faiss.py
 
 # AI Models (large files)
-model/*.pth
 model/*.onnx
 model/*.pb
 !model/.gitkeep
-model/
 
 # Uploads & User Data
 uploads/
@@ -75,7 +73,6 @@ logs/
 *.csv
 *.txt
 *.zip
-*.pth
 *.dat
 *.pkl
 *.h5
@@ -139,3 +136,4 @@ cache/
 *.swp
 *.tmp
 .DS_Store?
+service/__pycache__/nguoi_info_service.cpython-311.pyc

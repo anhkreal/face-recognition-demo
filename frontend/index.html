@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -984,6 +985,41 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </button>
       </form>
       <div id="searchEmbeddingResult"></div>
+      
+      <!-- Pagination Navigation for Embedding Search -->
+      <div id="embeddingPaginationControls" class="hidden">
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mt-4">
+          <!-- Left: Previous Button -->
+          <button id="embeddingPrevBtn" onclick="navigateEmbeddingPreviousPage()" 
+                  class="flex items-center gap-2 px-4 py-2 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-chevron-left"></i>
+            <span>Trang trước</span>
+          </button>
+          
+          <!-- Center: Page Indicator and Input -->
+          <div class="flex items-center gap-4">
+            <span id="embeddingPageIndicator" class="text-gray-700 font-medium">Trang 1 / 1</span>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600">Đi tới:</span>
+              <input type="number" id="embeddingPageInput" min="1" 
+                     class="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                     onkeypress="if(event.key==='Enter') goToPage('embedding', this.value)"
+                     placeholder="1">
+              <button onclick="goToPage('embedding', document.getElementById('embeddingPageInput').value)"
+                      class="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Right: Next Button -->
+          <button id="embeddingNextBtn" onclick="navigateEmbeddingNextPage()" 
+                  class="flex items-center gap-2 px-4 py-2 bg-indigo-700 text-white rounded-lg hover:bg-indigo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span>Trang sau</span>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </section>
     <!-- Query Section -->
     <section id="query" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
@@ -1268,6 +1304,41 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </button>
       </form>
       <div id="searchNguoiResult"></div>
+      
+      <!-- Pagination Navigation for People List -->
+      <div id="nguoiPaginationControls" class="hidden">
+        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-4 mt-4">
+          <!-- Left: Previous Button -->
+          <button id="nguoiPrevBtn" onclick="navigatePreviousPage()" 
+                  class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="fas fa-chevron-left"></i>
+            <span>Trang trước</span>
+          </button>
+          
+          <!-- Center: Page Indicator and Input -->
+          <div class="flex items-center gap-4">
+            <span id="nguoiPageIndicator" class="text-gray-700 font-medium">Trang 1 / 1</span>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-600">Đi tới:</span>
+              <input type="number" id="nguoiPageInput" min="1" 
+                     class="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"
+                     onkeypress="if(event.key==='Enter') goToPage('nguoi', this.value)"
+                     placeholder="1">
+              <button onclick="goToPage('nguoi', document.getElementById('nguoiPageInput').value)"
+                      class="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700 transition-colors">
+                <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Right: Next Button -->
+          <button id="nguoiNextBtn" onclick="navigateNextPage()" 
+                  class="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span>Trang sau</span>
+            <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
     </section>
 
     <!-- Reset Section -->
@@ -1325,9 +1396,31 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
     }
 
     function updateFileName(inputId, labelId, defaultText = 'Kéo và thả hoặc nhấp để chọn ảnh') {
+        console.log(`[DEBUG HTML] updateFileName called with inputId: '${inputId}', labelId: '${labelId}'`);
+        
         const input = document.getElementById(inputId);
         const label = document.getElementById(labelId);
-        label.textContent = input.files.length > 0 ? input.files[0].name : defaultText;
+        
+        console.log(`[DEBUG HTML] Input element '${inputId}': ${input ? 'found' : 'NOT FOUND'}`);
+        console.log(`[DEBUG HTML] Label element '${labelId}': ${label ? 'found' : 'NOT FOUND'}`);
+        
+        if (!label) {
+            console.error(`[ERROR HTML] Cannot find label element with id '${labelId}'`);
+            // Try to find similar elements
+            const similarElements = Array.from(document.querySelectorAll('[id*="' + labelId.substring(0, 5) + '"]'))
+                .map(el => el.id).filter(id => id);
+            console.log(`[DEBUG HTML] Similar elements found:`, similarElements);
+            return;
+        }
+        
+        if (!input) {
+            console.error(`[ERROR HTML] Cannot find input element with id '${inputId}'`);
+            return;
+        }
+        
+        const fileName = input.files.length > 0 ? input.files[0].name : defaultText;
+        console.log(`[DEBUG HTML] Setting textContent to: '${fileName}'`);
+        label.textContent = fileName;
     }
 
     // Kéo & thả cho queryFile
@@ -1634,13 +1727,39 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       validation.className = 'validation-message';
     }
     
-    window.validateImageId = validateImageId;
-    window.validateClassId = validateClassId;
-    window.validateName = validateName;
-    window.validateAge = validateAge;
-    window.validateLocation = validateLocation;
-    window.validatePath = validatePath;
+    // Legacy compatibility - functions will be available through modules
+    window.validateImageId = window.Validation?.validateId || function() { return true; };
+    window.validateClassId = window.Validation?.validateClassId || function() { return true; };
+    window.validateName = window.Validation?.validateName || function() { return true; };
+    window.validateAge = window.Validation?.validateAge || function() { return true; };
+    window.validateLocation = window.Validation?.validateLocation || function() { return true; };
+    window.validatePath = window.Validation?.validatePath || function() { return true; };
   </script>
-  <script src="utils/main.js"></script>
+  
+  <!-- JavaScript Modules -->
+  <!-- Core Configuration -->
+  <script src="assets/js/config/api-config.js"></script>
+  
+  <!-- Utilities -->
+  <script src="assets/js/utils/validation.js"></script>
+  <script src="assets/js/utils/api-utils.js"></script>
+  <script src="assets/js/utils/ui-utils.js"></script>
+  
+  <!-- Components -->
+  <script src="assets/js/components/snackbar.js"></script>
+  <script src="assets/js/components/modal.js"></script>
+  <script src="assets/js/components/navigation.js"></script>
+  
+  <!-- Pages -->
+  <script src="assets/js/pages/query.js"></script>
+  <script src="assets/js/pages/predict.js"></script>
+  <script src="assets/js/pages/add.js"></script>
+  <script src="assets/js/pages/edit.js"></script>
+  <script src="assets/js/pages/delete.js"></script>
+  <script src="assets/js/pages/reset.js"></script>
+  <script src="assets/js/pages/search.js"></script>
+  
+  <!-- Main Application -->
+  <script src="assets/js/app.js"></script>
 </body>
 </html>

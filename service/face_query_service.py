@@ -36,7 +36,7 @@ async def query_face_service(file: UploadFile = File(...)):
     
     print(f'Results: {results}')
     print(f'Tổng thời gian xử lý: {time.time() - start_total:.3f}s')
-    if results and results[0]['score'] > -0.5:
+    if results and results[0]['score'] > 0.5:
         print('Trả về thông tin top1')
         class_id = str(results[0]['class_id'])
         try:

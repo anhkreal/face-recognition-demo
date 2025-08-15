@@ -191,15 +191,20 @@
       loginBtn.disabled = true;
       loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang đăng nhập...';
       try {
+        // Use API config if available, otherwise fallback to original logic
         let apiHost = '';
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-          apiHost = window.location.origin;
+        if (window.API_CONFIG && window.API_CONFIG.host) {
+          apiHost = window.API_CONFIG.host;
         } else {
-          apiHost = 'http://127.0.0.1:8000';
+          if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.184') {
+            apiHost = window.location.origin;
+          } else {
+            apiHost = 'http://172.16.8.184:8000';
+          }
         }
+        
         const res = await fetch(apiHost + '/auth/login', {
           method: 'POST',
-          // Remove credentials to avoid CORS issue
           body: (() => {
             const formData = new FormData();
             formData.append('username', username);
@@ -236,5 +241,8 @@
       loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Đăng nhập';
     };
   </script>
+  
+  <!-- JavaScript Modules (Optional - for API config) -->
+  <script src="assets/js/config/api-config.js"></script>
 </body>
 </html>
