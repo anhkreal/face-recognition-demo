@@ -137,3 +137,4 @@ cache/
 *.tmp
 .DS_Store?
 service/__pycache__/nguoi_info_service.cpython-311.pyc
+__pycache__/app.cpython-311.pyc
