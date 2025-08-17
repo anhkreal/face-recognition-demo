@@ -1,0 +1,18 @@
+<!-- Search People Section -->
+<section id="searchNguoi" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
+  <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
+    <i class="fa-solid fa-users"></i> 
+    Tìm kiếm người
+    <div class="tooltip">
+      <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+      <span class="tooltiptext">Tìm kiếm thông tin người trong cơ sở dữ liệu</span>
+    </div>
+  </h2>
+  <form id="searchNguoiForm" class="space-y-4">
+    <input type="text" id="searchNguoiInput" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Nhập tên hoặc thông tin người cần tìm" />
+    <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold text-base transition-colors" onclick="callSearchNguoi()">
+      <i class="fa-solid fa-search mr-2"></i>Tìm kiếm người
+    </button>
+  </form>
+  <div id="searchNguoiResult"></div>
+</section>

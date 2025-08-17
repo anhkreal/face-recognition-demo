@@ -1,0 +1,377 @@
+<!-- Reset Section -->
+<section id="reset" class="page bg-white rounded-xl shadow-lg p-8 space-y-8 ring-1 ring-gray-900/5 border border-gray-100">
+  <div class="bg-gradient-to-r from-red-50 to-orange-50 rounded-lg p-6 border border-red-200">
+    <h2 class="text-3xl font-bold text-red-700 flex items-center gap-3 mb-2">
+      <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-database text-xl text-red-600"></i>
+      </div>
+      Đặt lại toàn bộ hệ thống
+    </h2>
+    <p class="text-red-600 text-sm leading-relaxed">
+      <i class="fa-solid fa-skull-crossbones mr-2"></i>
+      <strong>NGUY HIỂM:</strong> Thao tác này sẽ xóa vĩnh viễn toàn bộ dữ liệu và không thể hoàn tác!
+    </p>
+  </div>
+
+  <!-- System Status -->
+  <div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
+    <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-chart-line text-blue-600"></i>
+      Trạng thái hệ thống hiện tại
+    </h3>
+    <div id="systemStatus" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Status will be loaded dynamically -->
+      <div class="bg-white rounded-lg p-4 border border-blue-200 text-center">
+        <i class="fa-solid fa-users text-2xl text-blue-500 mb-2"></i>
+        <p class="text-sm text-gray-600">Số người trong hệ thống</p>
+        <p class="text-xl font-bold text-blue-700" id="totalPeople">--</p>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-blue-200 text-center">
+        <i class="fa-solid fa-images text-2xl text-green-500 mb-2"></i>
+        <p class="text-sm text-gray-600">Số ảnh đã lưu</p>
+        <p class="text-xl font-bold text-green-700" id="totalImages">--</p>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-blue-200 text-center">
+        <i class="fa-solid fa-vector-square text-2xl text-purple-500 mb-2"></i>
+        <p class="text-sm text-gray-600">Số embedding</p>
+        <p class="text-xl font-bold text-purple-700" id="totalEmbeddings">--</p>
+      </div>
+    </div>
+    <button 
+      type="button" 
+      class="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+      onclick="loadSystemStatus()"
+    >
+      <i class="fa-solid fa-refresh mr-2"></i>Tải lại trạng thái
+    </button>
+  </div>
+
+  <!-- Reset Options -->
+  <div class="bg-orange-50 rounded-xl p-6 border border-orange-200">
+    <h3 class="text-lg font-semibold text-orange-800 mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-sliders text-orange-600"></i>
+      Tùy chọn đặt lại
+    </h3>
+    
+    <div class="space-y-4">
+      <label class="flex items-start gap-3 cursor-pointer p-3 bg-white rounded-lg border border-orange-200 hover:border-orange-300 transition-colors">
+        <input 
+          type="checkbox" 
+          id="resetPeople" 
+          class="mt-1 w-4 h-4 text-orange-600 border-orange-300 rounded focus:ring-orange-500"
+          checked
+        />
+        <div>
+          <p class="font-semibold text-orange-800">Xóa thông tin người dùng</p>
+          <p class="text-sm text-orange-600">Xóa toàn bộ danh sách người và thông tin liên quan</p>
+        </div>
+      </label>
+
+      <label class="flex items-start gap-3 cursor-pointer p-3 bg-white rounded-lg border border-orange-200 hover:border-orange-300 transition-colors">
+        <input 
+          type="checkbox" 
+          id="resetImages" 
+          class="mt-1 w-4 h-4 text-orange-600 border-orange-300 rounded focus:ring-orange-500"
+          checked
+        />
+        <div>
+          <p class="font-semibold text-orange-800">Xóa dữ liệu ảnh</p>
+          <p class="text-sm text-orange-600">Xóa toàn bộ ảnh khuôn mặt đã lưu trữ</p>
+        </div>
+      </label>
+
+      <label class="flex items-start gap-3 cursor-pointer p-3 bg-white rounded-lg border border-orange-200 hover:border-orange-300 transition-colors">
+        <input 
+          type="checkbox" 
+          id="resetEmbeddings" 
+          class="mt-1 w-4 h-4 text-orange-600 border-orange-300 rounded focus:ring-orange-500"
+          checked
+        />
+        <div>
+          <p class="font-semibold text-orange-800">Xóa vector embedding</p>
+          <p class="text-sm text-orange-600">Xóa toàn bộ vector đặc trưng khuôn mặt</p>
+        </div>
+      </label>
+
+      <label class="flex items-start gap-3 cursor-pointer p-3 bg-white rounded-lg border border-orange-200 hover:border-orange-300 transition-colors">
+        <input 
+          type="checkbox" 
+          id="resetLogs" 
+          class="mt-1 w-4 h-4 text-orange-600 border-orange-300 rounded focus:ring-orange-500"
+        />
+        <div>
+          <p class="font-semibold text-orange-800">Xóa nhật ký hệ thống</p>
+          <p class="text-sm text-orange-600">Xóa toàn bộ log và lịch sử hoạt động</p>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Confirmation Section -->
+  <div class="bg-red-50 rounded-xl p-6 border border-red-200">
+    <h3 class="text-lg font-semibold text-red-800 mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-shield-exclamation text-red-600"></i>
+      Xác nhận đặt lại hệ thống
+    </h3>
+    
+    <div class="space-y-4">
+      <!-- Warning -->
+      <div class="bg-red-100 rounded-lg p-4 border border-red-300">
+        <div class="flex items-start gap-3">
+          <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl mt-1"></i>
+          <div>
+            <h4 class="font-semibold text-red-800 mb-2">Cảnh báo nghiêm trọng!</h4>
+            <ul class="text-sm text-red-700 space-y-1 list-disc list-inside">
+              <li>Toàn bộ dữ liệu sẽ bị xóa vĩnh viễn</li>
+              <li>Không thể khôi phục sau khi thực hiện</li>
+              <li>Hệ thống sẽ trở về trạng thái ban đầu</li>
+              <li>Tất cả người dùng sẽ mất khỏi cơ sở dữ liệu</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Input -->
+      <div class="space-y-3">
+        <label class="block text-sm font-medium text-red-700">
+          Để xác nhận, vui lòng nhập chính xác: <code class="bg-red-200 px-2 py-1 rounded font-mono">RESET SYSTEM</code>
+        </label>
+        <input 
+          type="text" 
+          id="resetConfirmationText" 
+          class="w-full border-red-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-base transition-all duration-200" 
+          placeholder="Nhập RESET SYSTEM để xác nhận"
+          onkeyup="validateResetConfirmation()"
+        />
+      </div>
+
+      <!-- Final Confirmation Checkbox -->
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input 
+          type="checkbox" 
+          id="finalResetConfirmation" 
+          class="mt-1 w-4 h-4 text-red-600 border-red-300 rounded focus:ring-red-500"
+          onchange="validateResetConfirmation()"
+        />
+        <div class="text-sm text-red-800">
+          <p class="font-semibold">Tôi hiểu rủi ro và chấp nhận hoàn toàn trách nhiệm cho hành động này</p>
+          <p class="text-red-600">Tôi xác nhận muốn đặt lại toàn bộ hệ thống</p>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex gap-4 pt-4">
+      <button 
+        type="button" 
+        class="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" 
+        onclick="validateAndExecuteReset()"
+        id="resetSubmitBtn"
+        disabled
+      >
+        <i class="fa-solid fa-nuclear text-xl"></i>
+        ĐẶT LẠI HỆ THỐNG
+      </button>    <button 
+      type="button" 
+      class="px-6 py-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50" 
+      onclick="cancelReset()"
+    >
+      <i class="fa-solid fa-times mr-2"></i>
+      Hủy bỏ
+    </button>
+  </div>
+
+  <!-- Result Display -->
+  <div id="resetResult" class="mt-6"></div>
+</section>
+
+<script>
+// Validation functions for reset form
+function validateResetForm() {
+  const errors = [];
+  const confirmText = document.getElementById('resetConfirmationText').value.trim();
+  const isCheckboxChecked = document.getElementById('finalResetConfirmation').checked;
+
+  // Clear previous validation states
+  const textInput = document.getElementById('resetConfirmationText');
+  textInput.classList.remove('input-error', 'input-success');
+  const existingError = textInput.parentNode.querySelector('.validation-message');
+  if (existingError) existingError.remove();
+
+  // Validate confirmation text
+  if (!confirmText) {
+    addResetValidationError(textInput, 'Vui lòng nhập text xác nhận');
+    errors.push('Chưa nhập text xác nhận');
+  } else if (confirmText !== 'RESET SYSTEM') {
+    addResetValidationError(textInput, 'Text xác nhận không chính xác');
+    errors.push('Text xác nhận phải là "RESET SYSTEM"');
+  } else {
+    addResetValidationSuccess(textInput, 'Text xác nhận chính xác');
+  }
+
+  // Validate confirmation checkbox
+  if (!isCheckboxChecked) {
+    errors.push('Vui lòng xác nhận hiểu rủi ro');
+  }
+
+  // Validate at least one reset option is selected
+  const resetOptions = {
+    people: document.getElementById('resetPeople').checked,
+    images: document.getElementById('resetImages').checked,
+    embeddings: document.getElementById('resetEmbeddings').checked,
+    logs: document.getElementById('resetLogs').checked
+  };
+
+  const hasAnyOption = Object.values(resetOptions).some(option => option);
+  if (!hasAnyOption) {
+    errors.push('Vui lòng chọn ít nhất một mục để đặt lại');
+  }
+
+  return { errors, resetOptions };
+}
+
+function addResetValidationError(field, message) {
+  field.classList.add('input-error');
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'validation-message validation-error';
+  errorDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i>${message}`;
+  field.parentNode.appendChild(errorDiv);
+}
+
+function addResetValidationSuccess(field, message) {
+  field.classList.add('input-success');
+  const successDiv = document.createElement('div');
+  successDiv.className = 'validation-message validation-success';
+  successDiv.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${message}`;
+  field.parentNode.appendChild(successDiv);
+}
+
+function validateAndExecuteReset() {
+  const validation = validateResetForm();
+  
+  if (validation.errors.length > 0) {
+    showSnackbar(`Lỗi: ${validation.errors.join(', ')}`, 'error');
+    
+    // Show detailed error modal
+    const errorList = validation.errors.map(error => `• ${error}`).join('\n');
+    showConfirmModal(
+      `Vui lòng kiểm tra các mục sau:\n\n${errorList}`,
+      null // No callback, just close modal
+    );
+    return;
+  }
+
+  // If validation passes, proceed with final confirmation
+  executeSystemReset(validation.resetOptions);
+}
+
+function loadSystemStatus() {
+  // Show loading state
+  document.getElementById('totalPeople').textContent = '...';
+  document.getElementById('totalImages').textContent = '...';
+  document.getElementById('totalEmbeddings').textContent = '...';
+  
+  // Simulate API call with timeout
+  setTimeout(() => {
+    // Mock data - replace with actual API calls
+    document.getElementById('totalPeople').textContent = '127';
+    document.getElementById('totalImages').textContent = '1,243';
+    document.getElementById('totalEmbeddings').textContent = '1,243';
+    
+    showSnackbar('Đã tải trạng thái hệ thống', 'info');
+  }, 1000);
+}
+
+function validateResetConfirmation() {
+  const validation = validateResetForm();
+  const isValid = validation.errors.length === 0;
+  
+  document.getElementById('resetSubmitBtn').disabled = !isValid;
+  
+  // Visual feedback for text input (handled in validateResetForm)
+  return isValid;
+}
+
+function executeSystemReset(resetOptions = null) {
+  if (!resetOptions) {
+    resetOptions = {
+      people: document.getElementById('resetPeople').checked,
+      images: document.getElementById('resetImages').checked,
+      embeddings: document.getElementById('resetEmbeddings').checked,
+      logs: document.getElementById('resetLogs').checked
+    };
+  }
+  
+  let confirmMessage = 'BẠN CHUẨN BỊ XÓA VĨNH VIỄN:\n\n';
+  const selectedItems = [];
+  
+  if (resetOptions.people) {
+    confirmMessage += '• Toàn bộ thông tin người dùng\n';
+    selectedItems.push('người dùng');
+  }
+  if (resetOptions.images) {
+    confirmMessage += '• Toàn bộ ảnh khuôn mặt\n';
+    selectedItems.push('ảnh');
+  }
+  if (resetOptions.embeddings) {
+    confirmMessage += '• Toàn bộ vector embedding\n';
+    selectedItems.push('embedding');
+  }
+  if (resetOptions.logs) {
+    confirmMessage += '• Toàn bộ nhật ký hệ thống\n';
+    selectedItems.push('log');
+  }
+  
+  confirmMessage += `\nBạn sẽ mất ${selectedItems.join(', ')} và KHÔNG THỂ khôi phục!\n\nĐây là cảnh báo cuối cùng.\nBạn có THỰC SỰ CHẮC CHẮN?`;
+  
+  showConfirmModal(confirmMessage, function() {
+    showSnackbar('Đang thực hiện đặt lại hệ thống...', 'warning');
+    callReset(resetOptions);
+  });
+}
+
+function cancelReset() {
+  document.getElementById('resetConfirmationText').value = '';
+  document.getElementById('finalResetConfirmation').checked = false;
+  document.getElementById('resetSubmitBtn').disabled = true;
+  
+  // Reset validation styles and messages
+  const textInput = document.getElementById('resetConfirmationText');
+  textInput.classList.remove('input-error', 'input-success');
+  const existingMsg = textInput.parentNode.querySelector('.validation-message');
+  if (existingMsg) existingMsg.remove();
+  
+  showSnackbar('Đã hủy thao tác đặt lại hệ thống', 'info');
+}
+
+// Real-time validation events
+document.getElementById('resetConfirmationText').addEventListener('input', function() {
+  // Debounce validation to avoid too many calls
+  clearTimeout(this.validationTimeout);
+  this.validationTimeout = setTimeout(() => {
+    validateResetConfirmation();
+  }, 300);
+});
+
+document.getElementById('finalResetConfirmation').addEventListener('change', function() {
+  validateResetConfirmation();
+});
+
+// Validate when reset options change
+document.querySelectorAll('input[type="checkbox"][id^="reset"]').forEach(checkbox => {
+  if (checkbox.id !== 'finalResetConfirmation') {
+    checkbox.addEventListener('change', function() {
+      if (document.getElementById('resetConfirmationText').value.trim() || 
+          document.getElementById('finalResetConfirmation').checked) {
+        validateResetConfirmation();
+      }
+    });
+  }
+});
+
+// Load system status on page load
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(loadSystemStatus, 1000);
+});
+</script>

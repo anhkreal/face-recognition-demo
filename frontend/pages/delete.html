@@ -1,0 +1,341 @@
+<!-- Delete Section -->
+<section id="delete" class="page bg-white rounded-xl shadow-lg p-8 space-y-8 ring-1 ring-gray-900/5 border border-gray-100">
+  <div class="bg-gradient-to-r from-red-50 to-pink-50 rounded-lg p-6 border border-red-200">
+    <h2 class="text-3xl font-bold text-red-700 flex items-center gap-3 mb-2">
+      <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-user-minus text-xl text-red-600"></i>
+      </div>
+      Xóa người khỏi hệ thống
+    </h2>
+    <p class="text-red-600 text-sm leading-relaxed">
+      <i class="fa-solid fa-triangle-exclamation mr-2"></i>
+      <strong>Cảnh báo:</strong> Thao tác này sẽ xóa vĩnh viễn thông tin và không thể hoàn tác!
+    </p>
+  </div>
+
+  <!-- Search person to delete -->
+  <div class="bg-orange-50 rounded-xl p-6 border border-orange-200">
+    <h3 class="text-lg font-semibold text-orange-800 mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-search text-orange-600"></i>
+      Tìm kiếm người cần xóa
+    </h3>
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input 
+          type="text" 
+          id="searchDeletePerson" 
+          class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-base" 
+          placeholder="Nhập tên hoặc mã ID để tìm kiếm..." 
+          onkeyup="searchPersonToDelete()"
+        />
+      </div>
+      <button 
+        type="button" 
+        class="px-6 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition-colors"
+        onclick="searchPersonToDelete()"
+      >
+        <i class="fa-solid fa-search mr-2"></i>Tìm kiếm
+      </button>
+    </div>
+    <div id="searchDeleteResults" class="mt-4"></div>
+  </div>
+
+  <form id="deleteForm" class="space-y-8">
+    <!-- Selected Person Info -->
+    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200" id="selectedPersonSection" style="display: none;">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-user-check text-blue-500"></i>
+        Thông tin người được chọn
+      </h3>
+      <div id="selectedPersonInfo" class="bg-white rounded-lg p-4 border border-gray-200"></div>
+    </div>
+
+    <!-- Delete Form -->
+    <div class="bg-red-50 rounded-xl p-6 border border-red-200">
+      <h3 class="text-lg font-semibold text-red-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-exclamation-triangle text-red-600"></i>
+        Xác nhận xóa
+      </h3>
+      
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-tag mr-1 text-gray-400"></i>
+            Mã định danh ảnh <span class="text-red-500">*</span>
+          </label>
+          <div class="tooltip w-full">
+            <input 
+              type="text" 
+              id="deleteImageId" 
+              class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-base transition-all duration-200" 
+              placeholder="Nhập mã định danh ảnh cần xóa" 
+              required
+              readonly
+            />
+            <span class="tooltiptext">Mã định danh của ảnh cần xóa (sẽ được điền tự động khi tìm kiếm)</span>
+          </div>
+        </div>
+
+        <!-- Confirmation Checkbox -->
+        <div class="bg-red-100 rounded-lg p-4 border border-red-300">
+          <label class="flex items-start gap-3 cursor-pointer">
+            <input 
+              type="checkbox" 
+              id="deleteConfirmation" 
+              class="mt-1 w-4 h-4 text-red-600 border-red-300 rounded focus:ring-red-500"
+              onchange="toggleDeleteButton()"
+            />
+            <div class="text-sm text-red-800">
+              <p class="font-semibold mb-1">Tôi hiểu và xác nhận:</p>
+              <ul class="list-disc list-inside space-y-1 text-red-700">
+                <li>Thao tác này sẽ xóa vĩnh viễn thông tin người dùng</li>
+                <li>Dữ liệu đã xóa không thể phục hồi</li>
+                <li>Hệ thống sẽ không còn nhận diện được khuôn mặt này</li>
+              </ul>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-4 pt-4">
+      <button 
+        type="button" 
+        class="flex-1 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" 
+        onclick="validateAndDeletePerson()"
+        id="deleteSubmitBtn"
+        disabled
+      >
+        <i class="fa-solid fa-trash text-xl"></i>
+        Xóa vĩnh viễn
+      </button>
+      
+      <button 
+        type="button" 
+        class="px-6 py-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50" 
+        onclick="resetDeleteForm()"
+      >
+        <i class="fa-solid fa-eraser mr-2"></i>
+        Hủy bỏ
+      </button>
+    </div>
+  </form>
+
+  <!-- Result Display -->
+  <div id="deleteResult" class="mt-6"></div>
+</section>
+
+<script>
+// Validation functions for delete form
+function validateDeleteForm() {
+  const errors = [];
+  const fields = {
+    deleteImageId: document.getElementById('deleteImageId')
+  };
+
+  // Clear previous validation states
+  Object.values(fields).forEach(field => {
+    field.classList.remove('input-error', 'input-success');
+    const errorMsg = field.parentNode.querySelector('.validation-message');
+    if (errorMsg) errorMsg.remove();
+  });
+
+  // Validate required fields
+  if (!fields.deleteImageId.value.trim()) {
+    addDeleteValidationError(fields.deleteImageId, 'Mã định danh ảnh là bắt buộc');
+    errors.push('Vui lòng chọn người cần xóa');
+  } else if (!/^[a-zA-Z0-9_]+$/.test(fields.deleteImageId.value.trim())) {
+    addDeleteValidationError(fields.deleteImageId, 'Mã ảnh chỉ được chứa chữ, số và dấu gạch dưới');
+    errors.push('Mã định danh ảnh không hợp lệ');
+  } else {
+    addDeleteValidationSuccess(fields.deleteImageId, 'Mã ảnh hợp lệ');
+  }
+
+  // Check confirmation checkbox
+  const confirmationChecked = document.getElementById('deleteConfirmation').checked;
+  if (!confirmationChecked) {
+    errors.push('Vui lòng xác nhận hiểu rủi ro của việc xóa');
+  }
+
+  return errors;
+}
+
+function addDeleteValidationError(field, message) {
+  field.classList.add('input-error');
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'validation-message validation-error';
+  errorDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i>${message}`;
+  field.parentNode.appendChild(errorDiv);
+}
+
+function addDeleteValidationSuccess(field, message) {
+  field.classList.add('input-success');
+  const successDiv = document.createElement('div');
+  successDiv.className = 'validation-message validation-success';
+  successDiv.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${message}`;
+  field.parentNode.appendChild(successDiv);
+}
+
+function validateAndDeletePerson() {
+  const errors = validateDeleteForm();
+  
+  if (errors.length > 0) {
+    showSnackbar(`Lỗi: ${errors.join(', ')}`, 'error');
+    
+    // Show detailed error modal
+    const errorList = errors.map(error => `• ${error}`).join('\n');
+    showConfirmModal(
+      `Vui lòng kiểm tra các mục sau:\n\n${errorList}`,
+      null // No callback, just close modal
+    );
+    return;
+  }
+
+  // If validation passes, proceed with final confirmation
+  confirmDelete();
+}
+
+function resetDeleteForm() {
+  document.getElementById('deleteForm').reset();
+  document.getElementById('searchDeletePerson').value = '';
+  document.getElementById('searchDeleteResults').innerHTML = '';
+  document.getElementById('selectedPersonSection').style.display = 'none';
+  document.getElementById('deleteSubmitBtn').disabled = true;
+  document.getElementById('deleteImageId').readOnly = true;
+  document.getElementById('deleteConfirmation').checked = false;
+  document.getElementById('deleteResult').innerHTML = '';
+  
+  // Reset validation styles and messages
+  document.querySelectorAll('#deleteForm input').forEach(input => {
+    input.classList.remove('input-error', 'input-success');
+  });
+  
+  document.querySelectorAll('#deleteForm .validation-message').forEach(msg => {
+    msg.remove();
+  });
+  
+  showSnackbar('Đã hủy thao tác xóa', 'info');
+}
+
+function searchPersonToDelete() {
+  const searchTerm = document.getElementById('searchDeletePerson').value.trim();
+  if (searchTerm.length < 2) {
+    document.getElementById('searchDeleteResults').innerHTML = '';
+    return;
+  }
+  
+  // Mock search results - replace with actual API call
+  const searchResults = [
+    { imageId: 'img_001', classId: 'person_001', name: 'Nguyễn Văn A', imagePath: 'images/person1.jpg' },
+    { imageId: 'img_002', classId: 'person_002', name: 'Trần Thị B', imagePath: 'images/person2.jpg' }
+  ].filter(person => 
+    person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.imageId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.classId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  let resultsHtml = '';
+  if (searchResults.length > 0) {
+    resultsHtml = '<div class="grid gap-3 mt-4">';
+    searchResults.forEach(person => {
+      resultsHtml += `
+        <div class="bg-white rounded-lg p-4 border border-gray-200 hover:border-red-300 cursor-pointer transition-all" onclick="selectPersonToDelete('${person.imageId}', '${person.classId}', '${person.name}', '${person.imagePath}')">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <i class="fa-solid fa-user-circle text-2xl text-red-500"></i>
+              <div>
+                <p class="font-semibold text-gray-800">${person.name}</p>
+                <p class="text-sm text-gray-500">ID: ${person.imageId} • Class: ${person.classId}</p>
+              </div>
+            </div>
+            <i class="fa-solid fa-trash text-red-400"></i>
+          </div>
+        </div>
+      `;
+    });
+    resultsHtml += '</div>';
+  } else {
+    resultsHtml = '<p class="text-gray-500 text-center py-4">Không tìm thấy kết quả phù hợp</p>';
+  }
+  
+  document.getElementById('searchDeleteResults').innerHTML = resultsHtml;
+}
+
+function selectPersonToDelete(imageId, classId, name, imagePath) {
+  // Fill form with selected data
+  document.getElementById('deleteImageId').value = imageId;
+  
+  // Show selected person info
+  document.getElementById('selectedPersonInfo').innerHTML = `
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div><strong>Mã ảnh:</strong> ${imageId}</div>
+      <div><strong>Mã người:</strong> ${classId}</div>
+      <div><strong>Họ tên:</strong> ${name}</div>
+      <div><strong>Đường dẫn:</strong> ${imagePath}</div>
+    </div>
+    <div class="mt-4 p-3 bg-red-100 rounded-lg border border-red-200">
+      <p class="text-red-700 text-sm font-medium">
+        <i class="fa-solid fa-exclamation-triangle mr-2"></i>
+        Người này sẽ bị xóa vĩnh viễn khỏi hệ thống!
+      </p>
+    </div>
+  `;
+  document.getElementById('selectedPersonSection').style.display = 'block';
+  
+  // Clear search results
+  document.getElementById('searchDeleteResults').innerHTML = '';
+  
+  // Reset confirmation
+  document.getElementById('deleteConfirmation').checked = false;
+  toggleDeleteButton();
+  
+  // Clear any previous validation
+  document.querySelectorAll('#deleteForm .validation-message').forEach(msg => {
+    msg.remove();
+  });
+  document.querySelectorAll('#deleteForm input[type="text"]').forEach(input => {
+    input.classList.remove('input-error', 'input-success');
+  });
+  
+  showSnackbar('Đã chọn người cần xóa', 'warning');
+}
+
+function toggleDeleteButton() {
+  const hasImageId = document.getElementById('deleteImageId').value.trim().length > 0;
+  const isConfirmed = document.getElementById('deleteConfirmation').checked;
+  document.getElementById('deleteSubmitBtn').disabled = !(hasImageId && isConfirmed);
+  
+  // Real-time validation when checkbox changes
+  if (hasImageId) {
+    validateDeleteForm();
+  }
+}
+
+function confirmDelete() {
+  const imageId = document.getElementById('deleteImageId').value.trim();
+  if (!imageId) {
+    showSnackbar('Vui lòng chọn người cần xóa', 'error');
+    return;
+  }
+  
+  showConfirmModal(
+    `BẠN CHUẨN BỊ XÓA VĨNH VIỄN!\n\nNgười có mã "${imageId}" sẽ bị xóa hoàn toàn khỏi hệ thống.\n\nThao tác này KHÔNG THỂ hoàn tác!\n\nBạn có CHẮC CHẮN muốn tiếp tục?`,
+    function() {
+      showSnackbar('Đang xóa người khỏi hệ thống...', 'info');
+      callDelete();
+    }
+  );
+}
+
+// Real-time validation
+document.getElementById('deleteImageId').addEventListener('input', function() {
+  if (this.value.trim()) {
+    validateDeleteForm();
+  }
+  toggleDeleteButton();
+});
+
+// Auto-enable/disable submit button
+document.getElementById('deleteImageId').addEventListener('input', toggleDeleteButton);
+</script>

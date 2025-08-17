@@ -1,0 +1,27 @@
+<!-- Predict Age/Gender Section -->
+<section id="predict" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
+  <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
+    <i class="fa-solid fa-user-clock"></i> 
+    Dự đoán tuổi và giới tính
+    <div class="tooltip">
+      <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+      <span class="tooltiptext">Upload ảnh khuôn mặt để dự đoán tuổi và giới tính của người trong ảnh</span>
+    </div>
+  </h2>
+  <form id="predictForm" class="space-y-4">
+    <div class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-all" id="predictDropArea">
+        <label for="predictFile" class="file-input-label justify-center text-gray-500" id="predictFileLabel">
+            <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+            <div class="ml-3">
+              <span id="predictFileName" class="block font-medium">Kéo và thả hoặc nhấp để chọn ảnh</span>
+              <span class="text-sm text-gray-400">Định dạng: JPG, PNG, WEBP. Kích thước tối đa: 10MB</span>
+            </div>
+        </label>
+        <input type="file" id="predictFile" accept="image/*" onchange="updateFileName('predictFile', 'predictFileName')" />
+    </div>
+    <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold text-base transition-colors" onclick="callPredict()">
+      <i class="fa-solid fa-magic-wand-sparkles mr-2"></i>Dự đoán tuổi và giới tính
+    </button>
+  </form>
+  <div id="predictResult"></div>
+</section>

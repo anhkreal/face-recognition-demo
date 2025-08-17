@@ -1,0 +1,366 @@
+<!-- Edit Section -->
+<section id="edit" class="page bg-white rounded-xl shadow-lg p-8 space-y-8 ring-1 ring-gray-900/5 border border-gray-100">
+  <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
+    <h2 class="text-3xl font-bold text-blue-700 flex items-center gap-3 mb-2">
+      <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-user-pen text-xl text-blue-600"></i>
+      </div>
+      Chỉnh sửa thông tin người dùng
+    </h2>
+    <p class="text-blue-600 text-sm leading-relaxed">
+      Cập nhật thông tin chi tiết của người đã có trong hệ thống nhận diện
+    </p>
+  </div>
+
+  <!-- Search existing person -->
+  <div class="bg-yellow-50 rounded-xl p-6 border border-yellow-200">
+    <h3 class="text-lg font-semibold text-yellow-800 mb-4 flex items-center gap-2">
+      <i class="fa-solid fa-search text-yellow-600"></i>
+      Tìm kiếm người cần chỉnh sửa
+    </h3>
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <input 
+          type="text" 
+          id="searchEditPerson" 
+          class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-base" 
+          placeholder="Nhập tên hoặc mã ID để tìm kiếm..." 
+          onkeyup="searchPersonToEdit()"
+        />
+      </div>
+      <button 
+        type="button" 
+        class="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg font-semibold transition-colors"
+        onclick="searchPersonToEdit()"
+      >
+        <i class="fa-solid fa-search mr-2"></i>Tìm kiếm
+      </button>
+    </div>
+    <div id="searchEditResults" class="mt-4"></div>
+  </div>
+
+  <form id="editForm" class="space-y-8">
+    <!-- Current Information Display -->
+    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200" id="currentInfoSection" style="display: none;">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-info-circle text-blue-500"></i>
+        Thông tin hiện tại
+      </h3>
+      <div id="currentPersonInfo" class="bg-white rounded-lg p-4 border border-gray-200"></div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-edit text-blue-500"></i>
+        Thông tin mới
+      </h3>
+      
+      <div class="space-y-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-tag mr-1 text-gray-400"></i>
+            Mã định danh ảnh <span class="text-red-500">*</span>
+          </label>
+          <div class="tooltip w-full">
+            <input 
+              type="text" 
+              id="editImageId" 
+              class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all duration-200" 
+              placeholder="Nhập mã định danh ảnh cần chỉnh sửa" 
+              required
+              readonly
+            />
+            <span class="tooltiptext">Mã định danh của ảnh cần chỉnh sửa (sẽ được điền tự động khi tìm kiếm)</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              <i class="fa-solid fa-fingerprint mr-1 text-gray-400"></i>
+              Mã định danh người mới
+            </label>
+            <div class="tooltip w-full">
+              <input 
+                type="text" 
+                id="editClassId" 
+                class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all duration-200" 
+                placeholder="Mã lớp mới (vd: person_002)" 
+              />
+              <span class="tooltiptext">Mã định danh mới cho người này trong hệ thống</span>
+            </div>
+          </div>
+          
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700">
+              <i class="fa-solid fa-user mr-1 text-gray-400"></i>
+              Họ và tên mới
+            </label>
+            <div class="tooltip w-full">
+              <input 
+                type="text" 
+                id="editTen" 
+                class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base transition-all duration-200" 
+                placeholder="Nhập họ tên mới" 
+              />
+              <span class="tooltiptext">Họ và tên mới cần cập nhật cho người này</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-4 pt-4">
+      <button 
+        type="button" 
+        class="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-3" 
+        onclick="validateAndSubmitEdit()"
+        id="editSubmitBtn"
+        disabled
+      >
+        <i class="fa-solid fa-save text-xl"></i>
+        Cập nhật thông tin
+      </button>
+      
+      <button 
+        type="button" 
+        class="px-6 py-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50" 
+        onclick="resetEditForm()"
+      >
+        <i class="fa-solid fa-eraser mr-2"></i>
+        Xóa form
+      </button>
+    </div>
+  </form>
+
+  <!-- Result Display -->
+  <div id="editResult" class="mt-6"></div>
+</section>
+
+<script>
+// Validation functions for edit form
+function validateEditForm() {
+  const errors = [];
+  const fields = {
+    editImageId: document.getElementById('editImageId'),
+    editClassId: document.getElementById('editClassId'),
+    editTen: document.getElementById('editTen')
+  };
+
+  // Clear previous validation states
+  Object.values(fields).forEach(field => {
+    field.classList.remove('input-error', 'input-success');
+    const errorMsg = field.parentNode.querySelector('.validation-message');
+    if (errorMsg) errorMsg.remove();
+  });
+
+  // Validate required fields
+  if (!fields.editImageId.value.trim()) {
+    addEditValidationError(fields.editImageId, 'Mã định danh ảnh là bắt buộc');
+    errors.push('Vui lòng chọn người cần chỉnh sửa');
+  } else if (!/^[a-zA-Z0-9_]+$/.test(fields.editImageId.value.trim())) {
+    addEditValidationError(fields.editImageId, 'Mã ảnh chỉ được chứa chữ, số và dấu gạch dưới');
+    errors.push('Mã định danh ảnh không hợp lệ');
+  } else {
+    addEditValidationSuccess(fields.editImageId, 'Mã ảnh hợp lệ');
+  }
+
+  // Validate at least one field must be updated
+  const hasClassId = fields.editClassId.value.trim();
+  const hasName = fields.editTen.value.trim();
+  
+  if (!hasClassId && !hasName) {
+    errors.push('Vui lòng nhập ít nhất một thông tin cần cập nhật');
+  }
+
+  // Validate fields if they have values
+  if (hasClassId) {
+    if (!/^[a-zA-Z0-9_]+$/.test(hasClassId)) {
+      addEditValidationError(fields.editClassId, 'Mã chỉ được chứa chữ, số và dấu gạch dưới');
+      errors.push('Mã định danh người không hợp lệ');
+    } else {
+      addEditValidationSuccess(fields.editClassId, 'Mã định danh hợp lệ');
+    }
+  }
+
+  if (hasName) {
+    if (hasName.length < 2) {
+      addEditValidationError(fields.editTen, 'Họ tên phải có ít nhất 2 ký tự');
+      errors.push('Họ tên quá ngắn');
+    } else if (!/^[a-zA-ZÀ-ỹ\s]+$/.test(hasName)) {
+      addEditValidationError(fields.editTen, 'Họ tên chỉ được chứa chữ cái và dấu cách');
+      errors.push('Họ tên chứa ký tự không hợp lệ');
+    } else {
+      addEditValidationSuccess(fields.editTen, 'Họ tên hợp lệ');
+    }
+  }
+
+  return errors;
+}
+
+function addEditValidationError(field, message) {
+  field.classList.add('input-error');
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'validation-message validation-error';
+  errorDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i>${message}`;
+  field.parentNode.appendChild(errorDiv);
+}
+
+function addEditValidationSuccess(field, message) {
+  field.classList.add('input-success');
+  const successDiv = document.createElement('div');
+  successDiv.className = 'validation-message validation-success';
+  successDiv.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${message}`;
+  field.parentNode.appendChild(successDiv);
+}
+
+function validateAndSubmitEdit() {
+  const errors = validateEditForm();
+  
+  if (errors.length > 0) {
+    showSnackbar(`Lỗi nhập liệu: ${errors.join(', ')}`, 'error');
+    
+    // Show detailed error modal
+    const errorList = errors.map(error => `• ${error}`).join('\n');
+    showConfirmModal(
+      `Vui lòng sửa các lỗi sau:\n\n${errorList}`,
+      null // No callback, just close modal
+    );
+    return;
+  }
+
+  // If validation passes, show confirmation
+  const imageId = document.getElementById('editImageId').value.trim();
+  const classId = document.getElementById('editClassId').value.trim();
+  const name = document.getElementById('editTen').value.trim();
+  
+  let updateInfo = [];
+  if (classId) updateInfo.push(`Mã định danh: ${classId}`);
+  if (name) updateInfo.push(`Họ tên: ${name}`);
+  
+  showConfirmModal(
+    `Bạn có chắc chắn muốn cập nhật thông tin cho "${imageId}"?\n\nThông tin mới:\n${updateInfo.join('\n')}`,
+    function() {
+      showSnackbar('Dữ liệu hợp lệ, đang cập nhật...', 'success');
+      callEdit();
+    }
+  );
+}
+
+function resetEditForm() {
+  document.getElementById('editForm').reset();
+  document.getElementById('searchEditPerson').value = '';
+  document.getElementById('searchEditResults').innerHTML = '';
+  document.getElementById('currentInfoSection').style.display = 'none';
+  document.getElementById('editSubmitBtn').disabled = true;
+  document.getElementById('editImageId').readOnly = true;
+  document.getElementById('editResult').innerHTML = '';
+  
+  // Reset validation styles and messages
+  document.querySelectorAll('#editForm input').forEach(input => {
+    input.classList.remove('input-error', 'input-success');
+  });
+  
+  document.querySelectorAll('#editForm .validation-message').forEach(msg => {
+    msg.remove();
+  });
+  
+  showSnackbar('Đã xóa toàn bộ form', 'info');
+}
+
+function searchPersonToEdit() {
+  const searchTerm = document.getElementById('searchEditPerson').value.trim();
+  if (searchTerm.length < 2) {
+    document.getElementById('searchEditResults').innerHTML = '';
+    return;
+  }
+  
+  // Mock search results - replace with actual API call
+  const searchResults = [
+    { imageId: 'img_001', classId: 'person_001', name: 'Nguyễn Văn A', imagePath: 'images/person1.jpg' },
+    { imageId: 'img_002', classId: 'person_002', name: 'Trần Thị B', imagePath: 'images/person2.jpg' }
+  ].filter(person => 
+    person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.imageId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    person.classId.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  let resultsHtml = '';
+  if (searchResults.length > 0) {
+    resultsHtml = '<div class="grid gap-3 mt-4">';
+    searchResults.forEach(person => {
+      resultsHtml += `
+        <div class="bg-white rounded-lg p-4 border border-gray-200 hover:border-blue-300 cursor-pointer transition-all" onclick="selectPersonToEdit('${person.imageId}', '${person.classId}', '${person.name}', '${person.imagePath}')">
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-user-circle text-2xl text-blue-500"></i>
+            <div>
+              <p class="font-semibold text-gray-800">${person.name}</p>
+              <p class="text-sm text-gray-500">ID: ${person.imageId} • Class: ${person.classId}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    resultsHtml += '</div>';
+  } else {
+    resultsHtml = '<p class="text-gray-500 text-center py-4">Không tìm thấy kết quả phù hợp</p>';
+  }
+  
+  document.getElementById('searchEditResults').innerHTML = resultsHtml;
+}
+
+function selectPersonToEdit(imageId, classId, name, imagePath) {
+  // Fill form with current data
+  document.getElementById('editImageId').value = imageId;
+  document.getElementById('editClassId').value = classId;
+  document.getElementById('editTen').value = name;
+  
+  // Show current info
+  document.getElementById('currentPersonInfo').innerHTML = `
+    <div class="grid grid-cols-2 gap-4 text-sm">
+      <div><strong>Mã ảnh:</strong> ${imageId}</div>
+      <div><strong>Mã người:</strong> ${classId}</div>
+      <div><strong>Họ tên:</strong> ${name}</div>
+      <div><strong>Đường dẫn:</strong> ${imagePath}</div>
+    </div>
+  `;
+  document.getElementById('currentInfoSection').style.display = 'block';
+  
+  // Enable submit button
+  document.getElementById('editSubmitBtn').disabled = false;
+  
+  // Clear search results
+  document.getElementById('searchEditResults').innerHTML = '';
+  
+  // Clear any previous validation
+  document.querySelectorAll('#editForm .validation-message').forEach(msg => {
+    msg.remove();
+  });
+  document.querySelectorAll('#editForm input').forEach(input => {
+    input.classList.remove('input-error', 'input-success');
+  });
+  
+  showSnackbar('Đã chọn người để chỉnh sửa', 'success');
+}
+
+// Real-time validation
+document.getElementById('editClassId').addEventListener('blur', function() {
+  if (document.getElementById('editImageId').value.trim()) {
+    validateEditForm();
+  }
+});
+
+document.getElementById('editTen').addEventListener('blur', function() {
+  if (document.getElementById('editImageId').value.trim()) {
+    validateEditForm();
+  }
+});
+
+// Enable/disable submit button based on form validation
+document.getElementById('editImageId').addEventListener('input', function() {
+  const hasImageId = this.value.trim().length > 0;
+  document.getElementById('editSubmitBtn').disabled = !hasImageId;
+});
+</script>

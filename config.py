@@ -3,7 +3,7 @@
 # Updated: August 2025
 
 # AI Model Configuration
-MODEL_PATH = 'model/ms1mv3_arcface_r18_fp16.pth'  # Primary ArcFace model
+MODEL_PATH = 'model/glint360k_cosface_r18_fp16_0.1.pth'  # Primary ArcFace model
 BACKUP_MODEL_PATH = 'model/glint360k_cosface_r18_fp16_0.1.pth'  # Backup model
 AGE_MODEL=  'model/ModelAge.pth' # Age prediction model
 GENDER_MODEL = 'model/ModelGender.pth' # Gender prediction model

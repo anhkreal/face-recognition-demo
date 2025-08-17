@@ -4,7 +4,16 @@
  */
 
 function showSnackbar(message, type = 'info', duration = 3000) {
-  const snackbar = document.getElementById('snackbar');
+  let snackbar = document.getElementById('snackbar');
+  
+  // Create snackbar element if it doesn't exist
+  if (!snackbar) {
+    console.warn('Snackbar element not found, creating one...');
+    snackbar = document.createElement('div');
+    snackbar.id = 'snackbar';
+    snackbar.className = 'snackbar';
+    document.body.appendChild(snackbar);
+  }
   
   // Icon mapping
   const icons = {

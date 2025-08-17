@@ -1,0 +1,326 @@
+<!-- Add Section -->
+<section id="add" class="page bg-white rounded-xl shadow-lg p-8 space-y-8 ring-1 ring-gray-900/5 border border-gray-100">
+  <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-6 border border-green-200">
+    <h2 class="text-3xl font-bold text-green-700 flex items-center gap-3 mb-2">
+      <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+        <i class="fa-solid fa-user-plus text-xl text-green-600"></i>
+      </div>
+      Thêm người mới vào hệ thống
+    </h2>
+    <p class="text-green-600 text-sm leading-relaxed">
+      Thêm thông tin chi tiết và ảnh khuôn mặt để hệ thống có thể nhận diện chính xác
+    </p>
+  </div>
+
+  <form id="addForm" class="space-y-8">
+    <!-- File Upload Area -->
+    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+      <label class="block text-sm font-semibold text-gray-700 mb-3">
+        <i class="fa-solid fa-camera mr-2 text-indigo-500"></i>
+        Ảnh khuôn mặt
+      </label>
+      <div id="addDropArea" class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center transition-all duration-300 hover:border-green-400 hover:bg-green-50 cursor-pointer">
+        <div class="file-input-wrapper w-full">
+          <input type="file" id="addFile" accept="image/*" onchange="updateFileName('addFile', 'addFileName')" class="w-full h-full opacity-0 absolute inset-0 cursor-pointer" />
+          <div class="file-input-label flex flex-col items-center gap-4">
+            <div class="w-16 h-16 bg-gradient-to-br from-green-100 to-emerald-100 rounded-full flex items-center justify-center">
+              <i class="fa-solid fa-cloud-arrow-up text-2xl text-green-600"></i>
+            </div>
+            <div>
+              <p id="addFileName" class="text-lg font-semibold text-gray-700">Kéo thả ảnh hoặc nhấp để chọn</p>
+              <p class="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+                Chọn ảnh khuôn mặt rõ nét, ánh sáng tốt • JPG, PNG • Tối đa 10MB
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-id-card text-indigo-500"></i>
+        Thông tin cá nhân
+      </h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-user mr-1 text-gray-400"></i>
+            Họ và tên đầy đủ
+          </label>
+          <div class="tooltip w-full">
+            <input 
+              type="text" 
+              id="addTen" 
+              class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base transition-all duration-200" 
+              placeholder="Nhập họ tên (vd: Nguyễn Văn Nam)" 
+              required
+            />
+            <span class="tooltiptext">Nhập họ và tên đầy đủ của người cần thêm vào hệ thống</span>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-fingerprint mr-1 text-gray-400"></i>
+            Mã định danh người
+          </label>
+          <div class="tooltip w-full">
+            <input 
+              type="text" 
+              id="addClassId" 
+              class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base transition-all duration-200" 
+              placeholder="Mã lớp (vd: person_001)" 
+              required
+            />
+            <span class="tooltiptext">Mã định danh duy nhất cho người này trong hệ thống nhận diện</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Technical Information -->
+    <div class="bg-gray-50 rounded-xl p-6 border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-cog text-indigo-500"></i>
+        Thông tin kỹ thuật
+      </h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-tag mr-1 text-gray-400"></i>
+            Mã định danh ảnh
+          </label>
+          <div class="tooltip w-full">
+            <input 
+              type="text" 
+              id="addImageId" 
+              class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base transition-all duration-200" 
+              placeholder="ID ảnh (vd: img_001)" 
+            />
+            <span class="tooltiptext">Mã định danh duy nhất cho file ảnh này trong cơ sở dữ liệu</span>
+          </div>
+        </div>
+        
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-folder mr-1 text-gray-400"></i>
+            Đường dẫn lưu trữ
+          </label>
+          <div class="tooltip w-full">
+            <input 
+              type="text" 
+              id="addImagePath" 
+              class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base transition-all duration-200" 
+              placeholder="Đường dẫn (vd: images/person1.jpg)" 
+            />
+            <span class="tooltiptext">Đường dẫn nơi lưu trữ file ảnh trên server</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex gap-4 pt-4">
+      <button 
+        type="button" 
+        class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center justify-center gap-3" 
+        onclick="validateAndSubmitAdd()"
+      >
+        <i class="fa-solid fa-user-plus text-xl"></i>
+        Thêm người mới
+      </button>
+      
+      <button 
+        type="button" 
+        class="px-6 py-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 rounded-xl font-semibold transition-all duration-200 hover:bg-gray-50" 
+        onclick="resetAddForm()"
+      >
+        <i class="fa-solid fa-eraser mr-2"></i>
+        Xóa form
+      </button>
+    </div>
+  </form>
+
+  <!-- Result Display -->
+  <div id="addResult" class="mt-6"></div>
+</section>
+
+<script>
+// Validation functions
+function validateAddForm() {
+  const errors = [];
+  const fields = {
+    addTen: document.getElementById('addTen'),
+    addClassId: document.getElementById('addClassId'),
+    addImageId: document.getElementById('addImageId'),
+    addImagePath: document.getElementById('addImagePath')
+  };
+
+  // Clear previous validation states
+  Object.values(fields).forEach(field => {
+    field.classList.remove('input-error', 'input-success');
+    const errorMsg = field.parentNode.querySelector('.validation-message');
+    if (errorMsg) errorMsg.remove();
+  });
+
+  // Validate required fields
+  if (!fields.addTen.value.trim()) {
+    addValidationError(fields.addTen, 'Họ và tên là bắt buộc');
+    errors.push('Vui lòng nhập họ và tên');
+  } else if (fields.addTen.value.trim().length < 2) {
+    addValidationError(fields.addTen, 'Họ tên phải có ít nhất 2 ký tự');
+    errors.push('Họ tên quá ngắn');
+  } else if (!/^[a-zA-ZÀ-ỹ\s]+$/.test(fields.addTen.value.trim())) {
+    addValidationError(fields.addTen, 'Họ tên chỉ được chứa chữ cái và dấu cách');
+    errors.push('Họ tên chứa ký tự không hợp lệ');
+  } else {
+    addValidationSuccess(fields.addTen, 'Họ tên hợp lệ');
+  }
+
+  if (!fields.addClassId.value.trim()) {
+    addValidationError(fields.addClassId, 'Mã định danh người là bắt buộc');
+    errors.push('Vui lòng nhập mã định danh người');
+  } else if (!/^[a-zA-Z0-9_]+$/.test(fields.addClassId.value.trim())) {
+    addValidationError(fields.addClassId, 'Mã chỉ được chứa chữ, số và dấu gạch dưới');
+    errors.push('Mã định danh người không hợp lệ');
+  } else {
+    addValidationSuccess(fields.addClassId, 'Mã định danh hợp lệ');
+  }
+
+  // Validate optional fields if filled
+  if (fields.addImageId.value.trim() && !/^[a-zA-Z0-9_]+$/.test(fields.addImageId.value.trim())) {
+    addValidationError(fields.addImageId, 'Mã ảnh chỉ được chứa chữ, số và dấu gạch dưới');
+    errors.push('Mã định danh ảnh không hợp lệ');
+  } else if (fields.addImageId.value.trim()) {
+    addValidationSuccess(fields.addImageId, 'Mã ảnh hợp lệ');
+  }
+
+  if (fields.addImagePath.value.trim() && !/^[a-zA-Z0-9_\/\\\.\-]+$/.test(fields.addImagePath.value.trim())) {
+    addValidationError(fields.addImagePath, 'Đường dẫn chứa ký tự không hợp lệ');
+    errors.push('Đường dẫn ảnh không hợp lệ');
+  } else if (fields.addImagePath.value.trim()) {
+    addValidationSuccess(fields.addImagePath, 'Đường dẫn hợp lệ');
+  }
+
+  // Validate file if selected
+  const fileInput = document.getElementById('addFile');
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!allowedTypes.includes(file.type)) {
+      errors.push('File phải là ảnh (JPG, PNG, GIF)');
+    } else if (file.size > maxSize) {
+      errors.push('File không được vượt quá 10MB');
+    }
+  }
+
+  return errors;
+}
+
+function addValidationError(field, message) {
+  field.classList.add('input-error');
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'validation-message validation-error';
+  errorDiv.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1"></i>${message}`;
+  field.parentNode.appendChild(errorDiv);
+}
+
+function addValidationSuccess(field, message) {
+  field.classList.add('input-success');
+  const successDiv = document.createElement('div');
+  successDiv.className = 'validation-message validation-success';
+  successDiv.innerHTML = `<i class="fa-solid fa-circle-check mr-1"></i>${message}`;
+  field.parentNode.appendChild(successDiv);
+}
+
+function validateAndSubmitAdd() {
+  const errors = validateAddForm();
+  
+  if (errors.length > 0) {
+    showSnackbar(`Lỗi nhập liệu: ${errors.join(', ')}`, 'error');
+    
+    // Show detailed error modal
+    const errorList = errors.map(error => `• ${error}`).join('\n');
+    showConfirmModal(
+      `Vui lòng sửa các lỗi sau:\n\n${errorList}`,
+      null // No callback, just close modal
+    );
+    return;
+  }
+
+  // If validation passes, show success and call API
+  showSnackbar('Dữ liệu hợp lệ, đang thêm người mới...', 'success');
+  callAdd();
+}
+
+function resetAddForm() {
+  document.getElementById('addForm').reset();
+  document.getElementById('addFileName').textContent = 'Kéo thả ảnh hoặc nhấp để chọn';
+  document.getElementById('addResult').innerHTML = '';
+  
+  // Reset validation styles and messages
+  document.querySelectorAll('#addForm input').forEach(input => {
+    input.classList.remove('input-error', 'input-success');
+  });
+  
+  document.querySelectorAll('#addForm .validation-message').forEach(msg => {
+    msg.remove();
+  });
+  
+  showSnackbar('Đã xóa toàn bộ form', 'info');
+}
+
+// Real-time validation
+document.getElementById('addTen').addEventListener('blur', function() {
+  if (this.value.trim()) {
+    validateAddForm();
+  }
+});
+
+document.getElementById('addClassId').addEventListener('blur', function() {
+  if (this.value.trim()) {
+    validateAddForm();
+  }
+});
+
+// Enhanced file drop functionality
+document.getElementById('addDropArea').addEventListener('dragover', function(e) {
+  e.preventDefault();
+  this.classList.add('border-green-400', 'bg-green-50');
+});
+
+document.getElementById('addDropArea').addEventListener('dragleave', function(e) {
+  e.preventDefault();
+  this.classList.remove('border-green-400', 'bg-green-50');
+});
+
+document.getElementById('addDropArea').addEventListener('drop', function(e) {
+  e.preventDefault();
+  this.classList.remove('border-green-400', 'bg-green-50');
+  
+  const files = e.dataTransfer.files;
+  if (files.length > 0) {
+    const file = files[0];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    if (!allowedTypes.includes(file.type)) {
+      showSnackbar('File phải là ảnh (JPG, PNG, GIF)', 'error');
+      return;
+    }
+    
+    if (file.size > maxSize) {
+      showSnackbar('File không được vượt quá 10MB', 'error');
+      return;
+    }
+
+    document.getElementById('addFile').files = files;
+    updateFileName('addFile', 'addFileName');
+    showSnackbar('Đã chọn file thành công', 'success');
+  }
+});
+</script>

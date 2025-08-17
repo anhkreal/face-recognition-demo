@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản Lý Hệ Thống - Face Recognition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      padding-top: 72px; /* Increased padding for taller navbar */
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+    
+    /* Enhanced Tab Styling with Sharp Design */
+    .tab-btn {
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 6px; /* Bo góc nhẹ cho tab/topbar */
+      border: 2px solid transparent;
+      background: linear-gradient(135deg, transparent 0%, rgba(99, 102, 241, 0.05) 100%);
+    }
+    
+    .tab-btn:hover {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.15) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .tab-btn:hover i {
+      transform: scale(1.1);
+      color: #4f46e5;
+    }
+    
+    .tab-btn.active {
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      color: #3730a3;
+      font-weight: 600;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+      border-color: #4f46e5;
+    }
+    
+    .tab-btn.active i {
+      color: #3730a3;
+      transform: scale(1.05);
+    }
+    
+    .tab-btn.active .tab-indicator {
+      transform: scaleX(1);
+    }
+    
+    .tab-indicator {
+      display: block;
+      width: 80%;
+      height: 4px;
+      background: linear-gradient(90deg, #4f46e5, #7c3aed);
+      margin: 4px auto 0;
+      border-radius: 0; /* Sharp indicator */
+      transform: scaleX(0);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.4);
+    }
+    
+    /* Page Transitions */
+    .page {
+      display: none;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .page.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+      animation: pageSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes pageSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    /* Enhanced File Input with Sharp Design */
+    .file-input-wrapper {
+      position: relative;
+      overflow: hidden;
+      display: inline-block;
+      cursor: pointer;
+      border-radius: 6px; /* Slightly sharp */
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 2px solid #e5e7eb;
+      background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    }
+    
+    .file-input-wrapper:hover {
+      border-color: #6366f1;
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
+      transform: translateY(-2px);
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+    
+    .file-input-wrapper input[type=file] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+    
+    .file-input-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+    }
+    
+    .file-input-wrapper:hover .file-input-label i {
+      transform: scale(1.1);
+      color: #6366f1;
+    }
+    
+    /* Enhanced Global Loading Overlay */
+    .global-loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+    }
+    
+    .global-loading-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    
+    .global-loading-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Enhanced Snackbar Component */
+    .snackbar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      min-width: 300px;
+      max-width: 500px;
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 14px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      z-index: 10000;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .snackbar.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    .snackbar.success {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+      color: white;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+    
+    .snackbar.error {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+      color: white;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    
+    .snackbar.warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
+      color: white;
+      border-color: rgba(245, 158, 11, 0.3);
+    }
+    
+    .snackbar.info {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
+      color: white;
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Mobile responsive snackbar */
+    @media (max-width: 640px) {
+      .snackbar {
+        left: 20px;
+        right: 20px;
+        transform: translateY(100px);
+        min-width: unset;
+        max-width: unset;
+      }
+      
+      .snackbar.show {
+        transform: translateY(0);
+      }
+    }
+    
+    /* Enhanced Confirmation Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0;
+    }
+    
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 32px;
+      border-radius: 12px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      transform: scale(0.9);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .modal-overlay.show .modal-content {
+      transform: scale(1);
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      justify-content: center;
+    }
+    
+    .modal-btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    
+    .modal-btn-primary {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+    }
+    
+    .modal-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+    }
+    
+    .modal-btn-secondary {
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      color: #475569;
+      border-color: #cbd5e1;
+    }
+    
+    .modal-btn-secondary:hover {
+      background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+      transform: translateY(-2px);
+    }
+    
+    /* Enhanced Tooltip with Sharp Design */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 250px;
+      max-width: 300px;
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      color: #fff;
+      text-align: left;
+      border-radius: 6px; /* Sharp design */
+      padding: 12px 16px;
+      position: absolute;
+      z-index: 10000;
+      bottom: 150%;
+      left: 50%;
+      margin-left: -125px;
+      font-size: 13px;
+      line-height: 1.4;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+      border: 1px solid #374151;
+      transform: translateY(10px);
+    }
+    
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: #1f2937 transparent transparent transparent;
+    }
+    
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+      transform: translateY(0);
+      animation: tooltipSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    @keyframes tooltipSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    
+    /* Responsive tooltip positioning */
+    @media (max-width: 768px) {
+      .tooltip .tooltiptext {
+        width: 200px;
+        margin-left: -100px;
+        font-size: 12px;
+      }
+    }
+    
+    /* Ensure tooltips appear above modals and other elements */
+    .tooltip .tooltiptext {
+      z-index: 10001;
+    }
+  </style>
+</head>
+<body>
+  <!-- Global Loading Overlay -->
+  <div id="globalLoadingOverlay" class="global-loading-overlay">
+    <div class="text-center text-white">
+      <div class="global-loading-spinner mx-auto mb-4"></div>
+      <p class="text-lg font-semibold">Đang xử lý...</p>
+    </div>
+  </div>
+
+  <!-- Snackbar for notifications -->
+  <div id="snackbar" class="snackbar"></div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="text-center">
+        <i class="fa-solid fa-circle-exclamation text-4xl text-amber-500 mb-4"></i>
+        <h3 class="text-lg font-semibold text-gray-800 mb-2">Xác nhận</h3>
+        <p id="confirmMessage" class="text-gray-600 mb-6">Bạn có chắc chắn muốn thực hiện hành động này?</p>
+        <div class="modal-buttons">
+          <button id="confirmCancel" class="modal-btn modal-btn-secondary">
+            <i class="fa-solid fa-times mr-2"></i>Hủy
+          </button>
+          <button id="confirmOk" class="modal-btn modal-btn-primary">
+            <i class="fa-solid fa-check mr-2"></i>Xác nhận
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 w-full z-30 bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[72px] flex items-center">
+      <div class="text-xl font-bold text-indigo-600 flex items-center gap-3 mr-8">
+        <i class="fa-solid fa-cogs text-3xl"></i>
+        <span>Management</span>
+      </div>
+      
+      <!-- Tab buttons moved to left side -->
+      <div class="flex items-center gap-1 flex-1">
+        <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('addPage', this)">
+          <i class="fa-solid fa-plus w-5 text-center"></i> 
+          <span class="hidden md:inline">Thêm</span> 
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('editPage', this)">
+          <i class="fa-solid fa-pen-to-square w-5 text-center"></i> 
+          <span class="hidden md:inline">Sửa</span> 
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('deletePage', this)">
+          <i class="fa-solid fa-trash w-5 text-center"></i> 
+          <span class="hidden md:inline">Xóa</span> 
+          <span class="tab-indicator"></span>
+        </button>
+        <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="showPage('resetPage', this)">
+          <i class="fa-solid fa-arrows-rotate w-5 text-center"></i> 
+          <span class="hidden md:inline">Reset</span> 
+          <span class="tab-indicator"></span>
+        </button>
+      </div>
+      
+      <!-- Auth area on the right -->
+      <div class="flex items-center gap-4 ml-auto">
+        <div class="h-8 border-l border-gray-200"></div>
+        <button onclick="window.location.href='base.html'" class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-sm flex items-center gap-2">
+          <i class="fa-solid fa-arrow-left"></i> Quay lại
+        </button>
+        <div class="flex gap-2" id="authNavArea">
+          <!-- Nút đăng nhập/đăng ký hoặc username + đăng xuất sẽ được render bằng JS -->
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Pages Container -->
+  <main class="max-w-6xl mx-auto mt-12 space-y-8 px-4 lg:px-6" id="pagesContainer">
+    <!-- Add Page -->
+    <section id="addPage" class="page">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+          <i class="fa-solid fa-plus text-green-600"></i>
+          Thêm Người Mới
+          <div class="tooltip">
+            <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+            <span class="tooltiptext">Thêm thông tin và ảnh của người mới vào cơ sở dữ liệu để nhận diện</span>
+          </div>
+        </h2>
+        
+        <form id="addForm" class="space-y-6">
+          <div id="addDropArea" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50">
+            <div class="file-input-wrapper w-full">
+              <input type="file" id="addFile" accept="image/*" onchange="updateFileName('addFile', 'addFileName')" class="w-full h-full">
+              <div class="file-input-label flex flex-col items-center gap-4 p-8">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400"></i>
+                <div>
+                  <p id="addFileName" class="text-lg font-semibold text-gray-600">Chọn ảnh khuôn mặt (tùy chọn)</p>
+                  <p class="text-sm text-gray-500 mt-1">Ảnh rõ mặt, ánh sáng tốt. JPG/PNG, tối đa 10MB</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="tooltip w-full">
+              <input type="text" id="addImageId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Nhập mã định danh ảnh (vd: img_001)" />
+              <span class="tooltiptext">Mã định danh duy nhất cho ảnh này, không trùng với ảnh khác trong hệ thống</span>
+            </div>
+            <div class="tooltip w-full">
+              <input type="text" id="addImagePath" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Đường dẫn ảnh (vd: images/person1.jpg)" />
+              <span class="tooltiptext">Đường dẫn lưu trữ file ảnh trên server hoặc local path</span>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="tooltip w-full">
+              <input type="text" id="addClassId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Mã lớp người (vd: person_001)" />
+              <span class="tooltiptext">Mã định danh của người này, dùng để nhóm các ảnh của cùng một người</span>
+            </div>
+            <div class="tooltip w-full">
+              <input type="text" id="addTen" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Họ và tên đầy đủ (vd: Nguyễn Văn Nam)" />
+              <span class="tooltiptext">Họ và tên thật của người này, sẽ được hiển thị khi nhận diện thành công</span>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-6 p-4 bg-gray-50 rounded-lg">
+            <span class="font-semibold text-gray-700 min-w-fit">Giới tính:</span>
+            <div class="flex gap-6">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="addGioitinh" value="1" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" checked> 
+                <span class="text-base">Nam</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="addGioitinh" value="0" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4"> 
+                <span class="text-base">Nữ</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="tooltip w-full">
+              <input type="number" id="addTuoi" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Tuổi (vd: 25)" min="1" max="120" />
+              <span class="tooltiptext">Tuổi của người này (từ 1-120)</span>
+            </div>
+            <div class="tooltip w-full">
+              <input type="text" id="addNoio" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 text-base" placeholder="Nơi ở (vd: Hà Nội)" />
+              <span class="tooltiptext">Nơi ở hiện tại của người này</span>
+            </div>
+          </div>
+          
+          <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2" onclick="callAdd()">
+            <i class="fa-solid fa-plus"></i>
+            Thêm Người Mới
+          </button>
+        </form>
+        
+        <div id="addResult" class="mt-6"></div>
+      </div>
+    </section>
+
+    <!-- Edit Page -->
+    <section id="editPage" class="page">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+          <i class="fa-solid fa-pen-to-square text-blue-600"></i>
+          Sửa Thông Tin
+          <div class="tooltip">
+            <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+            <span class="tooltiptext">Cập nhật thông tin hoặc ảnh của người đã có trong hệ thống</span>
+          </div>
+        </h2>
+        
+        <form id="editForm" class="space-y-6">
+          <div id="editDropArea" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50">
+            <div class="file-input-wrapper w-full">
+              <input type="file" id="editFile" accept="image/*" onchange="updateFileName('editFile', 'editFileName')" class="w-full h-full">
+              <div class="file-input-label flex flex-col items-center gap-4 p-8">
+                <i class="fa-solid fa-cloud-arrow-up text-4xl text-gray-400"></i>
+                <div>
+                  <p id="editFileName" class="text-lg font-semibold text-gray-600">Chọn ảnh mới (tùy chọn)</p>
+                  <p class="text-sm text-gray-500 mt-1">Để trống nếu không muốn thay đổi ảnh</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="tooltip w-full">
+            <input type="text" id="editImageId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" placeholder="Nhập Image ID cần sửa (bắt buộc, vd: img_001)" required />
+            <span class="tooltiptext">Mã định danh của ảnh cần chỉnh sửa. Trường này bắt buộc phải nhập</span>
+          </div>
+          
+          <div class="tooltip w-full">
+            <input type="text" id="editImagePath" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base" placeholder="Đường dẫn ảnh mới (tùy chọn, vd: images/new_path.jpg)" />
+            <span class="tooltiptext">Đường dẫn mới cho ảnh. Để trống nếu không muốn thay đổi đường dẫn hiện tại</span>
+          </div>
+          
+          <button type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2" onclick="callEdit()">
+            <i class="fa-solid fa-floppy-disk"></i>
+            Cập Nhật Thông Tin
+          </button>
+        </form>
+        
+        <div id="editResult" class="mt-6"></div>
+      </div>
+    </section>
+
+    <!-- Delete Page -->
+    <section id="deletePage" class="page">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+          <i class="fa-solid fa-trash text-red-600"></i>
+          Xóa Đối Tượng
+          <div class="tooltip">
+            <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+            <span class="tooltiptext">Xóa ảnh hoặc toàn bộ thông tin của một người khỏi hệ thống</span>
+          </div>
+        </h2>
+        
+        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div class="flex">
+            <i class="fa-solid fa-triangle-exclamation text-red-500 mt-1 mr-3"></i>
+            <div>
+              <h4 class="text-red-800 font-semibold">Cảnh báo</h4>
+              <p class="text-red-700 text-sm mt-1">Hành động xóa không thể hoàn tác. Vui lòng cân nhắc kỹ trước khi thực hiện.</p>
+            </div>
+          </div>
+        </div>
+        
+        <form id="deleteForm" class="space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+              <input type="radio" name="deleteType" value="embedding" class="text-red-600 focus:ring-red-500 w-4 h-4" checked onchange="toggleDeleteType()"> 
+              <div>
+                <span class="font-semibold text-gray-700">Xóa theo Embedding (Image ID)</span>
+                <div class="tooltip ml-1 inline-block">
+                  <i class="fa-solid fa-circle-info text-sm text-gray-400"></i>
+                  <span class="tooltiptext">Xóa một ảnh cụ thể, không ảnh hưởng đến các ảnh khác của cùng người</span>
+                </div>
+              </div>
+            </label>
+            <label class="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+              <input type="radio" name="deleteType" value="class_id" class="text-red-600 focus:ring-red-500 w-4 h-4" onchange="toggleDeleteType()"> 
+              <div>
+                <span class="font-semibold text-gray-700">Xóa theo Class ID</span>
+                <div class="tooltip ml-1 inline-block">
+                  <i class="fa-solid fa-circle-info text-sm text-gray-400"></i>
+                  <span class="tooltiptext">Xóa tất cả ảnh và thông tin của một người</span>
+                </div>
+              </div>
+            </label>
+          </div>
+          
+          <div id="deleteImageIdContainer" class="tooltip w-full">
+            <input type="text" id="deleteImageId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-base" placeholder="Nhập Image ID cần xóa (vd: img_001)" />
+            <span class="tooltiptext">Mã định danh của ảnh cần xóa</span>
+          </div>
+          
+          <div id="deleteClassIdContainer" class="tooltip w-full" style="display: none;">
+            <input type="text" id="deleteClassId" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 text-base" placeholder="Nhập Class ID cần xóa (vd: person_001)" />
+            <span class="tooltiptext">Mã định danh của người cần xóa tất cả thông tin</span>
+          </div>
+          
+          <button type="button" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2" onclick="callDelete()">
+            <i class="fa-solid fa-trash"></i>
+            Xóa Đối Tượng
+          </button>
+        </form>
+        
+        <div id="deleteResult" class="mt-6"></div>
+      </div>
+    </section>
+
+    <!-- Reset Page -->
+    <section id="resetPage" class="page">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+          <i class="fa-solid fa-arrows-rotate text-red-600"></i>
+          Reset Hệ Thống
+          <div class="tooltip">
+            <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+            <span class="tooltiptext">Xóa toàn bộ dữ liệu trong hệ thống FAISS và khởi tạo lại từ đầu</span>
+          </div>
+        </h2>
+        
+        <div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+          <div class="flex">
+            <i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl mt-1 mr-4"></i>
+            <div>
+              <h3 class="text-red-800 font-bold text-lg mb-2">Cảnh báo nghiêm trọng!</h3>
+              <ul class="text-red-700 text-sm space-y-1">
+                <li>• Hành động này sẽ xóa <strong>TOÀN BỘ</strong> dữ liệu trong FAISS index</li>
+                <li>• Tất cả embedding và thông tin người đã lưu sẽ bị mất</li>
+                <li>• Bạn sẽ phải thêm lại tất cả dữ liệu từ đầu</li>
+                <li>• Hành động này <strong>KHÔNG THỂ HOÀN TÁC</strong></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mb-6">
+          <label for="resetConfirm" class="block text-sm font-medium text-gray-700 mb-2">
+            Để xác nhận, vui lòng gõ: <strong class="text-red-600">RESET ALL DATA</strong>
+          </label>
+          <input type="text" id="resetConfirm" placeholder="Gõ chính xác: RESET ALL DATA" 
+                 class="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent">
+        </div>
+        
+        <button type="button" class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 rounded-lg transition flex items-center justify-center gap-2" onclick="confirmReset()">
+          <i class="fa-solid fa-skull-crossbones"></i>
+          RESET HỆ THỐNG
+        </button>
+        
+        <div id="resetResult" class="mt-6"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Scripts -->
+  <script>
+    let currentPage = 'add';
+
+    // Function to show specific page
+    function showPage(pageId, btn) {
+      // Hide all pages
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      
+      // Remove active class from all buttons
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      // Show selected page
+      const targetPage = document.getElementById(pageId + 'Page');
+      if (targetPage) {
+        setTimeout(() => {
+          targetPage.classList.add('active');
+        }, 50);
+      }
+      
+      // Add active class to clicked button
+      if (btn) {
+        btn.classList.add('active');
+      }
+      
+      currentPage = pageId;
+      
+      // Setup page-specific functionality
+      setupPageFunctionality(pageId);
+    }
+
+    // Setup page-specific functionality
+    function setupPageFunctionality(pageId) {
+      console.log(`Setting up functionality for page: ${pageId}`);
+      
+      // Setup drag & drop for file inputs based on page
+      if (pageId === 'add') {
+        setupDragAndDropForElement('addDropArea', 'addFile', 'addFileName');
+      } else if (pageId === 'edit') {
+        setupDragAndDropForElement('editDropArea', 'editFile', 'editFileName');
+      }
+    }
+
+    // Generic drag & drop setup function
+    function setupDragAndDropForElement(dropAreaId, fileInputId, fileNameId) {
+      const dropArea = document.getElementById(dropAreaId);
+      const fileInput = document.getElementById(fileInputId);
+      
+      if (dropArea && fileInput) {
+        console.log(`Setting up drag & drop for ${dropAreaId}`);
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+          dropArea.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.add('border-indigo-500', 'bg-indigo-50');
+          });
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+          dropArea.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('border-indigo-500', 'bg-indigo-50');
+          });
+        });
+        
+        dropArea.addEventListener('drop', e => {
+          const files = e.dataTransfer.files;
+          if (files && files.length > 0) {
+            fileInput.files = files;
+            updateFileName(fileInputId, fileNameId);
+          }
+        });
+      }
+    }
+
+    function updateFileName(inputId, labelId, defaultText = 'Kéo và thả hoặc nhấp để chọn ảnh') {
+        console.log(`[DEBUG HTML] updateFileName called with inputId: '${inputId}', labelId: '${labelId}'`);
+        
+        const input = document.getElementById(inputId);
+        const label = document.getElementById(labelId);
+        
+        console.log(`[DEBUG HTML] Input element '${inputId}': ${input ? 'found' : 'NOT FOUND'}`);
+        console.log(`[DEBUG HTML] Label element '${labelId}': ${label ? 'found' : 'NOT FOUND'}`);
+        
+        if (!label) {
+            console.error(`[ERROR HTML] Cannot find label element with id '${labelId}'`);
+            return;
+        }
+        
+        if (!input) {
+            console.error(`[ERROR HTML] Cannot find input element with id '${inputId}'`);
+            return;
+        }
+        
+        const fileName = input.files.length > 0 ? input.files[0].name : defaultText;
+        console.log(`[DEBUG HTML] Setting textContent to: '${fileName}'`);
+        label.textContent = fileName;
+    }
+
+    // Toggle delete type
+    function toggleDeleteType() {
+      const embeddingChecked = document.querySelector('input[name="deleteType"]:checked').value === 'embedding';
+      document.getElementById('deleteImageIdContainer').style.display = embeddingChecked ? 'block' : 'none';
+      document.getElementById('deleteClassIdContainer').style.display = embeddingChecked ? 'none' : 'block';
+    }
+
+    // Confirm reset function
+    function confirmReset() {
+      const confirmText = document.getElementById('resetConfirm').value;
+      if (confirmText !== 'RESET ALL DATA') {
+        if (window.showSnackbar) {
+          showSnackbar('Vui lòng gõ chính xác "RESET ALL DATA" để xác nhận', 'error');
+        } else {
+          alert('Vui lòng gõ chính xác "RESET ALL DATA" để xác nhận');
+        }
+        return;
+      }
+      
+      if (window.showConfirmModal) {
+        showConfirmModal(
+          'Bạn có THỰC SỰ chắc chắn muốn reset toàn bộ hệ thống không?\n\nHành động này sẽ:\n• Xóa TẤT CẢ dữ liệu trong FAISS\n• Xóa TẤT CẢ thông tin người đã lưu\n• Không thể hoàn tác\n\nChỉ thực hiện khi bạn hiểu rõ hậu quả!',
+          () => {
+            callReset();
+            document.getElementById('resetConfirm').value = '';
+          }
+        );
+      } else {
+        if (confirm('Bạn có THỰC SỰ chắc chắn muốn reset toàn bộ hệ thống không?')) {
+          callReset();
+          document.getElementById('resetConfirm').value = '';
+        }
+      }
+    }
+
+    // Global loading overlay functions
+    function showGlobalLoading() {
+      document.getElementById('globalLoadingOverlay').classList.add('show');
+    }
+    
+    function hideGlobalLoading() {
+      document.getElementById('globalLoadingOverlay').classList.remove('show');
+    }
+    
+    // Confirmation modal functions
+    function showConfirmModal(message, onConfirm) {
+      document.getElementById('confirmMessage').textContent = message;
+      document.getElementById('confirmModal').classList.add('show');
+      
+      const confirmBtn = document.getElementById('confirmOk');
+      const cancelBtn = document.getElementById('confirmCancel');
+      
+      // Remove existing event listeners
+      const newConfirmBtn = confirmBtn.cloneNode(true);
+      const newCancelBtn = cancelBtn.cloneNode(true);
+      confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+      cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+      
+      // Add new event listeners
+      newConfirmBtn.addEventListener('click', () => {
+        hideConfirmModal();
+        if (onConfirm) onConfirm();
+      });
+      
+      newCancelBtn.addEventListener('click', hideConfirmModal);
+    }
+    
+    function hideConfirmModal() {
+      document.getElementById('confirmModal').classList.remove('show');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('confirmModal').addEventListener('click', (e) => {
+      if (e.target.id === 'confirmModal') {
+        hideConfirmModal();
+      }
+    });
+    
+    // Make functions globally available
+    window.showGlobalLoading = showGlobalLoading;
+    window.hideGlobalLoading = hideGlobalLoading;
+    window.showConfirmModal = showConfirmModal;
+    window.hideConfirmModal = hideConfirmModal;
+    window.showPage = showPage;
+    window.updateFileName = updateFileName;
+    window.toggleDeleteType = toggleDeleteType;
+    window.confirmReset = confirmReset;
+
+    // DOMContentLoaded event handler
+    window.addEventListener('DOMContentLoaded', function () {
+      console.log('DOM loaded, initializing management page...');
+      
+      // Render khu vực authNavArea với token handling
+      const authNavArea = document.getElementById('authNavArea');
+      function renderAuthNav() {
+        authNavArea.innerHTML = '';
+        const username = sessionStorage.getItem('username');
+        const authToken = sessionStorage.getItem('authToken');
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+        
+        if (isLoggedIn && username && authToken) {
+          // Hiển thị username và nút đăng xuất
+          const userSpan = document.createElement('span');
+          userSpan.className = 'user-chip px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 font-semibold text-sm flex items-center gap-2';
+          userSpan.innerHTML = `<i class="fa-solid fa-user"></i> ${username}`;
+
+          const logoutBtn = document.createElement('button');
+          logoutBtn.className = 'logout-btn px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white font-semibold text-sm transition flex items-center gap-2';
+          logoutBtn.innerHTML = '<i class="fa-solid fa-right-from-bracket"></i>';
+          logoutBtn.title = 'Đăng xuất';
+          logoutBtn.onclick = function() {
+            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+              // Clear all authentication data
+              sessionStorage.removeItem('username');
+              sessionStorage.removeItem('isLoggedIn');
+              sessionStorage.removeItem('authToken');
+              localStorage.removeItem('authToken');
+              
+              // Redirect to base page
+              window.location.href = 'base.html';
+            }
+          };
+
+          authNavArea.appendChild(userSpan);
+          authNavArea.appendChild(logoutBtn);
+        } else {
+          // Hiển thị nút đăng nhập
+          const loginBtn = document.createElement('button');
+          loginBtn.className = 'login-btn px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition flex items-center gap-2';
+          loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
+          loginBtn.onclick = function() {
+            window.location.href = 'auth.html';
+          };
+
+          authNavArea.appendChild(loginBtn);
+        }
+      }
+      
+      // Initial auth render
+      renderAuthNav();
+      
+      // Show default page
+      setTimeout(() => {
+        const firstTab = document.querySelector('.tab-btn');
+        if (firstTab) {
+          showPage('addPage', firstTab);
+        }
+      }, 100);
+    });
+  </script>
+
+  <!-- JavaScript Modules -->
+  <!-- Core Configuration -->
+  <script src="assets/js/config/api-config.js"></script>
+  
+  <!-- Utilities -->
+  <script src="assets/js/utils/validation.js"></script>
+  <script src="assets/js/utils/api-utils.js"></script>
+  <script src="assets/js/utils/ui-utils.js"></script>
+  
+  <!-- Components -->
+  <script src="assets/js/components/snackbar.js"></script>
+  <script src="assets/js/components/modal.js"></script>
+  <script src="assets/js/components/navigation.js"></script>
+  
+  <!-- Pages -->
+  <script src="assets/js/pages/add.js"></script>
+  <script src="assets/js/pages/edit.js"></script>
+  <script src="assets/js/pages/delete.js"></script>
+  <script src="assets/js/pages/reset.js"></script>
+  
+  <!-- Main Application -->
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

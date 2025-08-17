@@ -1,0 +1,27 @@
+<!-- Query Section -->
+<section id="query" class="page bg-white rounded-xl shadow-md p-8 space-y-6 ring-1 ring-gray-900/5">
+  <h2 class="text-2xl font-bold text-indigo-600 flex items-center gap-3">
+    <i class="fa-solid fa-magnifying-glass"></i> 
+    Nhận diện khuôn mặt
+    <div class="tooltip">
+      <i class="fa-solid fa-circle-info text-sm text-gray-400 cursor-help"></i>
+      <span class="tooltiptext">Upload ảnh chứa khuôn mặt để tìm kiếm người tương ứng trong cơ sở dữ liệu</span>
+    </div>
+  </h2>
+  <form id="queryForm" class="space-y-4">
+    <div class="file-input-wrapper w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-500 transition-all" id="queryDropArea">
+        <label for="queryFile" class="file-input-label justify-center text-gray-500" id="queryFileLabel">
+            <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+            <div class="ml-3">
+              <span id="queryFileName" class="block font-medium">Kéo và thả hoặc nhấp để chọn ảnh</span>
+              <span class="text-sm text-gray-400">Định dạng: JPG, PNG, WEBP. Kích thước tối đa: 10MB</span>
+            </div>
+        </label>
+        <input type="file" id="queryFile" accept="image/*" onchange="updateFileName('queryFile', 'queryFileName')" />
+    </div>
+    <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold text-base transition-colors" onclick="callQuery()">
+      <i class="fa-solid fa-paper-plane mr-2"></i>Gửi ảnh để nhận diện
+    </button>
+  </form>
+  <div id="queryResult"></div>
+</section>

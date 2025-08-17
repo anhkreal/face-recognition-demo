@@ -14,11 +14,23 @@ function callProtectedApi(endpoint, options, resultId, successMessage, useGlobal
   }
   
   // Add token to headers for authentication
-  const token = sessionStorage.getItem('authToken');
+  let token = sessionStorage.getItem('authToken');
+  
+  // Fallback to localStorage if not in sessionStorage
+  if (!token || token === 'undefined' || token === 'null') {
+    token = localStorage.getItem('authToken');
+  }
   
   if (!token || token === 'undefined' || token === 'null') {
-    alert('Token không hợp lệ! Vui lòng đăng nhập lại.');
-    window.location.href = 'auth.html';
+    console.error('No valid auth token found');
+    if (window.showSnackbar) {
+      showSnackbar('Token không hợp lệ! Vui lòng đăng nhập lại.', 'error');
+    } else {
+      alert('Token không hợp lệ! Vui lòng đăng nhập lại.');
+    }
+    setTimeout(() => {
+      window.location.href = 'auth.html';
+    }, 1500);
     return;
   }
   
