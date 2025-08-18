@@ -15,9 +15,10 @@ router = APIRouter()
 def search_embeddings_api(
     query: str = Query('', description='Chuỗi tìm kiếm (image_id, image_path, class_id)'),
     page: int = Query(1, ge=1, description='Số trang (bắt đầu từ 1)'),
-    page_size: int = Query(15, ge=1, le=15, description='Số kết quả mỗi trang')
+    page_size: int = Query(15, ge=1, le=15, description='Số kết quả mỗi trang'),
+    sort_by: str = Query('image_id_asc', description='Sắp xếp theo')
 ):
     # ✅ Thread-safe query operation - không load lại
     with faiss_lock:
-        result = faiss_manager.query_embeddings_by_string(query, page, page_size)
+        result = faiss_manager.query_embeddings_by_string(query, page, page_size, sort_by)
     return result

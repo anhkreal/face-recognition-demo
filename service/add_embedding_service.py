@@ -15,14 +15,7 @@ faiss_manager = get_faiss_manager()
 faiss_lock = get_faiss_lock()
 nguoi_repo = NguoiRepository()
 
-def add_embedding_service(
-    # image_id: int = Form(...),
-    # image_path: str = Form(...),
-    # class_id: int = Form(...),
-    # ten: str = Form(...),
-    # gioitinh: str = Form(...),
-    # tuoi: int = Form(...),
-    # noio: str = Form(...),
+async def add_embedding_service(
     input: AddEmbeddingInput = Depends(AddEmbeddingInput.as_form),
     file: UploadFile = File(...)
 ):

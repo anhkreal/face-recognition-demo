@@ -3,11 +3,12 @@ from db.models import Nguoi
 from db.connection_helper import ConnectionHelper
 
 class NguoiRepository(ConnectionHelper):
-    def search_nguoi_paged(self, query: str = "", page: int = 1, page_size: int = 15):
+    def search_nguoi_paged(self, query: str = "", page: int = 1, page_size: int = 15, sort_by: str = "ten_asc"):
         """
         Tìm kiếm danh sách người, trả về kết quả của một trang chỉ định (phân trang).
         page: số trang (bắt đầu từ 1)
         page_size: số lượng mỗi trang
+        sort_by: sắp xếp theo (ten_asc, ten_desc, tuoi_asc, tuoi_desc, class_id_asc, class_id_desc, created_asc, created_desc, updated_asc, updated_desc)
         """
         import unicodedata
         def remove_accents(input_str):
@@ -15,6 +16,18 @@ class NguoiRepository(ConnectionHelper):
                 c for c in unicodedata.normalize('NFD', input_str)
                 if unicodedata.category(c) != 'Mn'
             )
+        
+        # Parse sort_by
+        sort_mapping = {
+            'ten_asc': 'ten ASC',
+            'ten_desc': 'ten DESC', 
+            'tuoi_asc': 'tuoi ASC',
+            'tuoi_desc': 'tuoi DESC',
+            'class_id_asc': 'CAST(class_id AS UNSIGNED) ASC',
+            'class_id_desc': 'CAST(class_id AS UNSIGNED) DESC'
+        }
+        order_clause = sort_mapping.get(sort_by, 'ten ASC')
+        
         offset = (page - 1) * page_size
         sql = "SELECT * FROM nguoi"
         params = []
@@ -25,7 +38,7 @@ class NguoiRepository(ConnectionHelper):
             params += [f"%{query.lower()}%", f"%{query.lower()}%", f"%{query.lower()}%", f"%{query.lower()}%"]
         if where_clauses:
             sql += " WHERE " + " AND ".join(where_clauses)
-        sql += " ORDER BY ten ASC LIMIT %s OFFSET %s"
+        sql += f" ORDER BY {order_clause} LIMIT %s OFFSET %s"
         params += [page_size, offset]
         with self as cursor:
             cursor.execute(sql, tuple(params))

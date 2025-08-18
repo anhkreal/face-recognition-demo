@@ -16,6 +16,7 @@ from api.list_nguoi import list_nguoi_router
 from api.search_embeddings import embedding_search_router
 from api.health import health_router
 from api.predict import predict_router
+from api.add_embedding_simple import simple_add_router
 # Optional performance monitoring
 try:
     from api.performance import performance_router
@@ -161,7 +162,7 @@ app.include_router(list_nguoi_router, tags=["👥 Danh Sách Người"])
 app.include_router(embedding_search_router, tags=["🔍 Tìm Kiếm Khuôn Mặt"])
 app.include_router(health_router, tags=["🏥 Kiểm Tra Sức Khỏe"])
 app.include_router(predict_router, tags=["🔮 Dự Đoán Tuổi/Giới Tính"])
-
+app.include_router(simple_add_router, tags=["🚀 Thêm Đơn Giản (Public)"])
 # Optional: Performance monitoring if available
 if PERFORMANCE_AVAILABLE:
     app.include_router(performance_router, tags=["⚡ Hiệu Suất"])

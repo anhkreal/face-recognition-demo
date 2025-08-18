@@ -4,7 +4,7 @@ import numpy as np
 import cv2
 from service.add_embedding_service import add_embedding_service
 from Depend.depend import AddEmbeddingInput
-# 🔐 Import MySQL Authentication
+# 🔐 Import MySQL Authentication with Dynamic Auth
 from auth.mysql_auth import get_current_user_mysql
 
 add_router = APIRouter()
@@ -43,7 +43,7 @@ add_router = APIRouter()
     response_description="Kết quả thêm khuôn mặt mới vào hệ thống với thông tin authentication",
     tags=["➕ Thêm Dữ Liệu (Protected)"]
 )
-def add_embedding(
+async def add_embedding(
     input: AddEmbeddingInput = Depends(AddEmbeddingInput.as_form),
     file: UploadFile = File(
         ..., 
@@ -56,10 +56,11 @@ def add_embedding(
     🔒 Protected API - Thêm khuôn mặt mới vào hệ thống
     
     Chỉ user đã đăng nhập MySQL mới có thể sử dụng.
+    Yêu cầu tất cả thông tin đầy đủ.
     """
-    print(f"User {current_user} dang them embedding")
+    print(f"User {current_user} dang them embedding with full info")
     
-    result = add_embedding_service(input, file)
+    result = await add_embedding_service(input, file)
     
     # Thêm thông tin audit log
     if result.get("success"):

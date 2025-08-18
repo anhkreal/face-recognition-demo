@@ -34,10 +34,11 @@ list_nguoi_router = APIRouter()
 def list_nguoi(
     query: str = Query("", description="Từ khóa tìm kiếm theo tên (để trống để hiển thị tất cả)"),
     page: int = Query(1, ge=1, description="Số trang hiện tại (bắt đầu từ 1)"),
-    page_size: int = Query(15, ge=1, le=100, description="Số lượng kết quả mỗi trang (1-100)")
+    page_size: int = Query(15, ge=1, le=100, description="Số lượng kết quả mỗi trang (1-100)"),
+    sort_by: str = Query('ten_asc', description='Sắp xếp theo: ten_asc, ten_desc, tuoi_asc, tuoi_desc, class_id_asc, class_id_desc, created_asc, created_desc, updated_asc, updated_desc')
 ):
     try:
-        nguoi_list = get_nguoi_info_service(query, page, page_size)
+        nguoi_list = get_nguoi_info_service(query, page, page_size, sort_by)
         return JSONResponse(content={"results": nguoi_list}, status_code=200)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)

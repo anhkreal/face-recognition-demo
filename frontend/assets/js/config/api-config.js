@@ -13,7 +13,7 @@ if (window.location.hostname === 'localhost') {
   apiHost = 'http://172.16.8.184:8000';
 } else {
   // Default fallback
-  apiHost = 'http://127.0.0.1:8000';
+  apiHost = 'http://172.16.8.184:8000';
 }
 
 // Export configuration

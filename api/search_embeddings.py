@@ -38,9 +38,10 @@ embedding_search_router = APIRouter()
 def search_embeddings_api_route(
     query: str = Query('', description='Từ khóa tìm kiếm (image_id, image_path, class_id) - để trống để hiển thị tất cả'),
     page: int = Query(1, ge=1, description='Số trang hiện tại (bắt đầu từ 1)'),
-    page_size: int = Query(15, ge=1, le=15, description='Số lượng kết quả mỗi trang (tối đa 15)')
+    page_size: int = Query(15, ge=1, le=15, description='Số lượng kết quả mỗi trang (tối đa 15)'),
+    sort_by: str = Query('image_id_asc', description='Sắp xếp theo: image_id_asc, image_id_desc, class_id_asc, class_id_desc, image_path_asc, image_path_desc, created_asc, created_desc, updated_asc, updated_desc')
 ):
-    result = search_embeddings_api(query, page, page_size)
+    result = search_embeddings_api(query, page, page_size, sort_by)
     # Convert numpy types to native Python types for JSON serialization
     import numpy as np
     def convert(obj):

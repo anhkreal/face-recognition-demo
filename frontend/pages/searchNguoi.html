@@ -9,7 +9,17 @@
     </div>
   </h2>
   <form id="searchNguoiForm" class="space-y-4">
-    <input type="text" id="searchNguoiInput" class="w-full border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Nhập tên hoặc thông tin người cần tìm" />
+    <div class="flex gap-3">
+      <input type="text" id="searchNguoiInput" class="flex-1 border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base" placeholder="Nhập tên hoặc thông tin người cần tìm" />
+      <select id="sortNguoiSelect" class="border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-base bg-white min-w-[200px]">
+        <option value="ten_asc">Tên (A → Z)</option>
+        <option value="ten_desc">Tên (Z → A)</option>
+        <option value="tuoi_asc">Tuổi (thấp → cao)</option>
+        <option value="tuoi_desc">Tuổi (cao → thấp)</option>
+        <option value="class_id_asc">Class ID (thấp → cao)</option>
+        <option value="class_id_desc">Class ID (cao → thấp)</option>
+      </select>
+    </div>
     <button type="button" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold text-base transition-colors" onclick="callSearchNguoi()">
       <i class="fa-solid fa-search mr-2"></i>Tìm kiếm người
     </button>

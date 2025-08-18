@@ -284,9 +284,9 @@ function callSearchNguoi(page = 1) {
   }
 }
 
-function callGetAllNguoi(page = 1) {
+function callGetAllNguoi(page = 1, sortBy = 'ten_asc') {
   if (window.SearchPage && window.SearchPage.callGetAllNguoi) {
-    window.SearchPage.callGetAllNguoi(page);
+    window.SearchPage.callGetAllNguoi(page, sortBy);
   }
 }
 
@@ -352,7 +352,9 @@ function navigatePreviousPage() {
       callSearchNguoi(newPage);
     } else {
       console.log(`⬅️ Calling callGetAllNguoi(${newPage}) without query`);
-      callGetAllNguoi(newPage);
+      const sortSelect = document.getElementById('sortNguoiSelect');
+      const sortBy = sortSelect ? sortSelect.value : 'ten_asc';
+      callGetAllNguoi(newPage, sortBy);
     }
   } else {
     console.log('⬅️ Already at first page');
@@ -389,7 +391,9 @@ function navigateNextPage() {
       callSearchNguoi(newPage);
     } else {
       console.log(`➡️ Calling callGetAllNguoi(${newPage}) without query`);
-      callGetAllNguoi(newPage);
+      const sortSelect = document.getElementById('sortNguoiSelect');
+      const sortBy = sortSelect ? sortSelect.value : 'ten_asc';
+      callGetAllNguoi(newPage, sortBy);
     }
   } else {
     console.log('➡️ Already at last page');
@@ -512,7 +516,9 @@ function goToPage(type, pageNumber) {
       if (state.currentQuery) {
         callSearchNguoi(page);
       } else {
-        callGetAllNguoi(page);
+        const sortSelect = document.getElementById('sortNguoiSelect');
+        const sortBy = sortSelect ? sortSelect.value : 'ten_asc';
+        callGetAllNguoi(page, sortBy);
       }
     } else {
       callSearchEmbedding(page);

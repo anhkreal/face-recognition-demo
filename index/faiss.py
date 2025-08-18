@@ -5,12 +5,13 @@ import pandas as pd
 
 
 class FaissIndexManager:
-    def query_embeddings_by_string(self, query, page=1, page_size=15):
+    def query_embeddings_by_string(self, query, page=1, page_size=15, sort_by="image_id_asc"):
         """
-        Truy vấn embedding chỉ theo class_id (không phân biệt hoa thường), hỗ trợ phân trang.
+        Truy vấn embedding chỉ theo class_id (không phân biệt hoa thường), hỗ trợ phân trang và sắp xếp.
         - query: chuỗi class_id cần tìm
         - page: số trang (bắt đầu từ 1)
         - page_size: số ảnh mỗi trang
+        - sort_by: sắp xếp theo (image_id_asc, image_id_desc, class_id_asc, class_id_desc, image_path_asc, image_path_desc)
         Trả về dict: { 'total': ..., 'total_pages': ..., 'page': ..., 'results': [...] }
         """
         query = str(query).strip().lower()
@@ -33,6 +34,21 @@ class FaissIndexManager:
                         'class_id': cls_id,
                         'faiss_index': idx
                     })
+        
+        # Sorting
+        if sort_by == "image_id_desc":
+            results.sort(key=lambda x: int(str(x['image_id']).split('_')[0]) if '_' in str(x['image_id']) else int(x['image_id']), reverse=True)
+        elif sort_by == "class_id_asc":
+            results.sort(key=lambda x: int(x['class_id']) if str(x['class_id']).isdigit() else 0)
+        elif sort_by == "class_id_desc":
+            results.sort(key=lambda x: int(x['class_id']) if str(x['class_id']).isdigit() else 0, reverse=True)
+        elif sort_by == "image_path_asc":
+            results.sort(key=lambda x: str(x['image_path']))
+        elif sort_by == "image_path_desc":
+            results.sort(key=lambda x: str(x['image_path']), reverse=True)
+        else:  # default image_id_asc
+            results.sort(key=lambda x: int(str(x['image_id']).split('_')[0]) if '_' in str(x['image_id']) else int(x['image_id']))
+        
         total = len(results)
         total_pages = (total + page_size - 1) // page_size if page_size > 0 else 1
         page = max(1, min(page, total_pages))

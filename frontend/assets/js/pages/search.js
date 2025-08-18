@@ -22,6 +22,7 @@ let nguoiSearchState = {
 
 function callSearchNguoi(page = 1) {
   const searchInput = document.getElementById('searchNguoiInput');
+  const sortSelect = document.getElementById('sortNguoiSelect');
   const resultId = 'searchNguoiResult';
   
   if (!searchInput) {
@@ -30,6 +31,7 @@ function callSearchNguoi(page = 1) {
   }
   
   const query = searchInput.value?.trim();
+  const sortBy = sortSelect ? sortSelect.value : 'ten_asc';
   
   // Update state
   nguoiSearchState.currentQuery = query || '';
@@ -37,7 +39,7 @@ function callSearchNguoi(page = 1) {
   
   // If empty, show all people
   if (!query) {
-    callGetAllNguoi(page);
+    callGetAllNguoi(page, sortBy);
     return;
   }
   
@@ -48,11 +50,12 @@ function callSearchNguoi(page = 1) {
   
   window.UIUtils.showLoading(resultId, true);
   
-  // Use list_nguoi API with query parameter and pagination
+  // Use list_nguoi API with query parameter, pagination, and sorting
   const params = new URLSearchParams();
   params.append('query', query);
   params.append('page', page);
   params.append('page_size', nguoiSearchState.pageSize);
+  params.append('sort_by', sortBy);
   
   fetch(`${window.API_CONFIG.host}/list_nguoi?${params.toString()}`, {
     method: 'GET',
@@ -176,7 +179,7 @@ function callSearchNguoi(page = 1) {
     });
 }
 
-function callGetAllNguoi(page = 1) {
+function callGetAllNguoi(page = 1, sortBy = 'ten_asc') {
   const resultId = 'searchNguoiResult';
   
   // Update state
@@ -190,10 +193,11 @@ function callGetAllNguoi(page = 1) {
   
   window.UIUtils.showLoading(resultId, true);
   
-  // Add pagination parameters
+  // Add pagination and sorting parameters
   const params = new URLSearchParams();
   params.append('page', page);
   params.append('page_size', nguoiSearchState.pageSize);
+  params.append('sort_by', sortBy);
   
   fetch(`${window.API_CONFIG.host}/list_nguoi?${params.toString()}`, {
     method: 'GET',
@@ -409,9 +413,11 @@ function callSearchEmbedding(page = 1) {
   console.log(`🔍 callSearchEmbedding called with page: ${page}`);
   
   const classId = document.getElementById('searchEmbeddingInput')?.value?.trim();
+  const sortSelect = document.getElementById('sortEmbeddingSelect');
+  const sortBy = sortSelect ? sortSelect.value : 'image_id_asc';
   const resultId = 'searchEmbeddingResult';
   
-  console.log(`📝 Query: "${classId}", Page: ${page}`);
+  console.log(`📝 Query: "${classId}", Page: ${page}, Sort: ${sortBy}`);
   
   // Update state
   embeddingSearchState.currentQuery = classId || '';
@@ -433,6 +439,7 @@ function callSearchEmbedding(page = 1) {
   }
   params.append('page', page);
   params.append('page_size', embeddingSearchState.pageSize);
+  params.append('sort_by', sortBy);
   
   const url = `${window.API_CONFIG.host}/search_embeddings?${params.toString()}`;
   console.log(`🌐 Calling API: ${url}`);
@@ -722,3 +729,28 @@ function updatePaginationControls(type, currentPage, totalPages) {
 window.togglePaginationControls = togglePaginationControls;
 window.updatePaginationControls = updatePaginationControls;
 window.startNewEmbeddingSearch = startNewEmbeddingSearch;
+
+// Add event listeners for sort dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+  // Sort dropdown for nguoi search
+  const sortNguoiSelect = document.getElementById('sortNguoiSelect');
+  if (sortNguoiSelect) {
+    sortNguoiSelect.addEventListener('change', function() {
+      // Reset to page 1 when changing sort
+      console.log('🔄 Sort nguoi changed to:', this.value);
+      callSearchNguoi(1);
+    });
+  }
+  
+  // Sort dropdown for embedding search
+  const sortEmbeddingSelect = document.getElementById('sortEmbeddingSelect');
+  if (sortEmbeddingSelect) {
+    sortEmbeddingSelect.addEventListener('change', function() {
+      // Reset to page 1 when changing sort
+      console.log('🔄 Sort embedding changed to:', this.value);
+      startNewEmbeddingSearch();
+    });
+  }
+  
+  console.log('✅ Sort event listeners added');
+});

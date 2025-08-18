@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field, constr, conint
 from fastapi import APIRouter, Depends, File, UploadFile, Form
+from typing import Optional
 
 class AddEmbeddingInput(BaseModel):
     image_id: int = Field(..., description="ID duy nhất cho ảnh (số nguyên)")
@@ -20,6 +21,36 @@ class AddEmbeddingInput(BaseModel):
         gioitinh: bool = Form(..., description="Giới tính (true=Nam, false=Nữ)"),
         tuoi: int = Form(..., description="Tuổi"),
         noio: str = Form(..., description="Nơi ở/địa chỉ")
+    ):
+        return cls(
+            image_id=image_id,
+            image_path=image_path,
+            class_id=class_id,
+            ten=ten,
+            gioitinh=gioitinh,
+            tuoi=tuoi,
+            noio=noio
+        )
+
+class SimpleAddEmbeddingInput(BaseModel):
+    image_id: Optional[int] = Field(None, description="ID duy nhất cho ảnh (tự động tạo nếu không cung cấp)")
+    image_path: Optional[str] = Field(None, description="Đường dẫn lưu trữ ảnh (tự động tạo nếu không cung cấp)")
+    class_id: Optional[int] = Field(None, description="ID nhóm người (tự động tạo nếu không cung cấp)")
+    ten: Optional[str] = Field(None, description="Tên đầy đủ của người (tự động tạo nếu không cung cấp)")
+    gioitinh: Optional[bool] = Field(None, description="Giới tính (predict từ ảnh nếu không cung cấp)")
+    tuoi: Optional[int] = Field(None, description="Tuổi của người (predict từ ảnh nếu không cung cấp)")
+    noio: Optional[str] = Field(None, description="Nơi ở/địa chỉ (mặc định 'default' nếu không cung cấp)")
+
+    @classmethod
+    def as_form(
+        cls,
+        image_id: Optional[int] = Form(None, description="ID duy nhất cho ảnh (tự động tạo nếu để trống)"),
+        image_path: Optional[str] = Form(None, description="Đường dẫn lưu trữ ảnh (tự động tạo nếu để trống)"),
+        class_id: Optional[int] = Form(None, description="ID nhóm người (tự động tạo nếu để trống)"),
+        ten: Optional[str] = Form(None, description="Tên đầy đủ (tự động tạo nếu để trống)"),
+        gioitinh: Optional[bool] = Form(None, description="Giới tính (predict từ ảnh nếu để trống)"),
+        tuoi: Optional[int] = Form(None, description="Tuổi (predict từ ảnh nếu để trống)"),
+        noio: Optional[str] = Form(None, description="Nơi ở (mặc định 'default' nếu để trống)")
     ):
         return cls(
             image_id=image_id,
