@@ -1,0 +1,733 @@
+<!-- 
+  Camera Stream page - Kế thừa từ base.html
+  Chức năng nhận diện khuôn mặt thời gian thực với ONNX model
+  Giao diện 3 cột: webcam, kết quả phát hiện, điều khiển
+-->
+
+<style>
+  .camera-page {
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+  .camera-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .camera-video {
+    display: none;
+  }
+  .camera-canvas {
+    border: 1px solid #444;
+    max-width: 100%;
+  }
+  .camera-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 200px;
+    flex: 0 0 auto;
+  }
+  .camera-btn {
+    padding: 10px;
+    background: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  .camera-btn:hover {
+    background: #45a049;
+  }
+  .camera-btn:disabled {
+    background: #666;
+    cursor: not-allowed;
+  }
+  .camera-status {
+    padding: 10px;
+    background: #333;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .camera-best-face {
+    max-width: 200px;
+    max-height: 200px;
+    border: 2px solid #4CAF50;
+    margin-top: 10px;
+  }
+  .camera-stats {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .camera-debug {
+    margin-top: 10px;
+    padding: 5px;
+    background: #444;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  .camera-column-label {
+    margin-top: 10px;
+    font-size: 12px;
+    text-align: center;
+  }
+</style>
+
+<div class="page camera-page">
+  <!-- Tiêu đề trang -->
+  <h2 class="text-2xl font-bold text-white mb-6">Face Detection - Camera Stream</h2>
+  
+  <!-- Bố cục 3 cột: Video webcam, Kết quả phát hiện, Điều khiển -->
+  <div class="camera-container">
+    <!-- Cột 1: Video webcam và ảnh gốc -->
+    <div class="flex-1">
+      <!-- Video webcam (ẩn, chỉ dùng lấy frame) -->
+      <video id="cameraVideo" class="camera-video" autoplay muted playsinline></video>
+      <!-- Canvas hiển thị ảnh gốc từ webcam -->
+      <canvas id="cameraOutput" class="camera-canvas"></canvas>
+      <div class="camera-column-label">Live Camera Feed</div>
+    </div>
+    
+    <!-- Cột 2: Kết quả phát hiện (bounding box, keypoints) -->
+    <div class="flex-1">
+      <!-- Canvas vẽ bounding box, keypoints khuôn mặt với video background -->
+      <canvas id="cameraOutput2" class="camera-canvas"></canvas>
+      <div class="camera-column-label">Video + Detection Overlay</div>
+    </div>
+    
+    <!-- Cột 3: Điều khiển, trạng thái, thống kê -->
+    <div class="camera-controls">
+      <!-- Nút bắt đầu/dừng chọn khuôn mặt tốt nhất -->
+      <button id="cameraCaptureBtn" class="camera-btn">Start Capturing Best Face</button>
+      <!-- Nút tải về khuôn mặt tốt nhất -->
+      <button id="cameraDownloadBtn" class="camera-btn" disabled>Download Best Face</button>
+      <!-- Nút reset trạng thái -->
+      <button id="cameraResetBtn" class="camera-btn">Reset</button>
+      
+      <!-- Hiển thị trạng thái và thống kê -->
+      <div id="cameraStatus" class="camera-status">
+        <div>Status: Initializing...</div>
+        <div id="cameraStats" class="camera-stats">
+          <div>Best Score: 0</div>
+          <div>Faces Detected: 0</div>
+          <div>Blur Threshold: 50</div>
+        </div>
+      </div>
+      
+      <!-- Canvas hiển thị khuôn mặt tốt nhất -->
+      <canvas id="cameraBestFaceCanvas" class="camera-best-face" style="display: none;"></canvas>
+      
+      <!-- Kết quả từ server -->
+      <div id="cameraServerResult" style="white-space: pre-wrap; margin-top: 10px; font-size: 12px;"></div>
+      
+      <!-- Thông tin debug -->
+      <div class="camera-debug" id="cameraDebugInfo">
+        <div>Debug: Initializing...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Hàm khởi tạo camera với dynamic imports
+  async function initializeCameraModule() {
+    try {
+      // Dynamic import thư viện ONNX và các hàm xử lý
+      const ort = await import("https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/esm/ort.min.js");
+      const evaluateModule = await import('./evaluate.js');
+      
+      // Extract functions từ evaluate module
+      const {nms, distance2kps, distance2bbox, alignFace, calculateFaceQuality, varianceOfLaplacian} = evaluateModule;
+      
+      // Cấu hình ONNX runtime
+      ort.env.wasm.proxy = false;
+      ort.env.wasm.numThreads = 3;
+      ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/";
+
+      return { ort, nms, distance2kps, distance2bbox, alignFace, calculateFaceQuality, varianceOfLaplacian };
+    } catch (error) {
+      console.error('Failed to load camera dependencies:', error);
+      throw new Error(`Module loading failed: ${error.message}`);
+    }
+  }
+
+  // Biến trạng thái toàn cục cho camera module
+  let cameraState = {
+    isCapturing: false,
+    bestScore: 0,
+    bestFaceData: null,
+    facesDetectedCount: 0,
+    processedFacesCount: 0,
+    detector: null,
+    animationFrameId: null
+  };
+
+  // Biến toàn cục để lưu các hàm từ evaluate.js
+  let evaluateFunctions = {};
+
+  // Export camera state cho debugging
+  window.cameraState = cameraState;
+
+  // Hàm debug log
+  function debugLog(message) {
+    console.log(`[Camera] ${message}`);
+    const debugInfo = document.getElementById('cameraDebugInfo');
+    if (debugInfo) {
+      debugInfo.innerHTML = `<div>Debug: ${message}</div>`;
+    }
+  }
+
+  // Hàm gửi ảnh lên server
+  async function sendBestFaceToServer(faceDataUrl) {
+    const serverUrl = 'http://127.0.0.1:8000/query';
+    
+    try {
+      debugLog("Preparing to send best face to server...");
+      const status = document.getElementById('cameraStatus');
+      status.innerHTML = '<div style="color: #ff9800;">📤 Sending best face to server...</div>';
+
+      if (!faceDataUrl) {
+        throw new Error('No face data URL provided');
+      }
+      if (!faceDataUrl.startsWith('data:image/')) {
+        throw new Error('Invalid data URL format');
+      }
+      
+      debugLog(`Data URL length: ${faceDataUrl.length}`);
+      
+      const response = await fetch(faceDataUrl);
+      const blob = await response.blob();
+      
+      debugLog(`Blob size: ${blob.size} bytes, type: ${blob.type}`);
+      
+      if (blob.size === 0) {
+        throw new Error('Generated blob is empty');
+      }
+      if (blob.size > 10 * 1024 * 1024) { 
+        throw new Error('Image too large (>10MB)');
+      }
+      
+      const formData = new FormData();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const filename = `best_face_${timestamp}.png`;
+      
+      formData.append('file', blob, filename);
+      
+      debugLog("Sending request to server...");
+      const serverResponse = await fetch(serverUrl, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!serverResponse.ok) {
+        throw new Error(`Server error: ${serverResponse.status} ${serverResponse.statusText}`);
+      }
+      
+      const result = await serverResponse.json();
+      debugLog("Server response received successfully");
+      
+      status.innerHTML = '<div style="color: #4CAF50;">✅ Server response received!</div>';
+      
+      const serverResult = document.getElementById('cameraServerResult');
+      if (serverResult) {
+        serverResult.textContent = JSON.stringify(result, null, 2);
+      }
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Error sending to server:', error);
+      debugLog(`Server error: ${error.message}`);
+      
+      const status = document.getElementById('cameraStatus');
+      status.innerHTML = `<div style="color: red;">❌ Server error: ${error.message}</div>`;
+      
+      const serverResult = document.getElementById('cameraServerResult');
+      if (serverResult) {
+        serverResult.textContent = `Error: ${error.message}`;
+      }
+      
+      throw error;
+    }
+  }
+
+  // Lớp FaceDetector để xử lý ONNX model
+  class FaceDetector {
+    constructor(session) {
+      this.session = session;
+      this.nmsThresh = 0.4;
+      this.centerCache = {};
+      const outputs = session.outputNames;
+      const F = outputs.length;
+      
+      if (F === 6 || F === 9) {
+        this.fmc = 3;
+        this.strides = [8, 16, 32];
+        this.useKps = F === 9;
+        this.numAnchors = 2;
+      } else {
+        this.fmc = 5;
+        this.strides = [8, 16, 32, 64, 128];
+        this.useKps = F === 15;
+        this.numAnchors = 1;
+      }
+      
+      this.inputName = session.inputNames[0];
+      this.outputNames = session.outputNames;
+      this.inputSize = [640, 640];
+    }
+
+    static async create(modelUrl, ortModule) {
+      try {
+        const sess = await ortModule.InferenceSession.create(modelUrl, {
+          executionProviders: ['wasm'],
+        });
+        return new FaceDetector(sess);
+      } catch (e) {
+        console.error("Failed to create session:", e);
+        throw e;
+      }
+    }
+
+    async detect(source, threshold = 0.5) {
+      if (source.videoWidth === 0 || source.videoHeight === 0) {
+        return [];
+      }
+
+      const imgHeight = source.videoHeight;
+      const imgWidth = source.videoWidth;
+      const [inputWidth, inputHeight] = this.inputSize;
+      
+      const imRatio = imgHeight / imgWidth;
+      const modelRatio = inputHeight / inputWidth;
+      
+      let newHeight, newWidth, detScale;
+      if (imRatio > modelRatio) {
+        newHeight = inputHeight;
+        newWidth = Math.round(newHeight / imRatio);
+      } else {
+        newWidth = inputWidth;
+        newHeight = Math.round(newWidth * imRatio);
+      }
+      detScale = newHeight / imgHeight;
+
+      const detCanvas = document.createElement('canvas');
+      detCanvas.width = inputWidth;
+      detCanvas.height = inputHeight;
+      const detCtx = detCanvas.getContext('2d');
+      
+      detCtx.fillStyle = 'black';
+      detCtx.fillRect(0, 0, inputWidth, inputHeight);
+      detCtx.drawImage(source, 0, 0, newWidth, newHeight);
+
+      const imageData = detCtx.getImageData(0, 0, inputWidth, inputHeight);
+      const preprocessedData = new Float32Array(3 * inputWidth * inputHeight);
+      
+      for (let i = 0; i < imageData.data.length / 4; i++) {
+        preprocessedData[i] = (imageData.data[i * 4] - 127.5) / 128.0;
+        preprocessedData[inputWidth * inputHeight + i] = (imageData.data[i * 4 + 1] - 127.5) / 128.0;
+        preprocessedData[2 * inputWidth * inputHeight + i] = (imageData.data[i * 4 + 2] - 127.5) / 128.0;
+      }
+
+      // Sử dụng ort từ global scope thay vì import
+      const inputTensor = new window.ortModule.Tensor('float32', preprocessedData, [1, 3, inputHeight, inputWidth]);
+      const results = await this.session.run({ [this.inputName]: inputTensor });
+      
+      return this.postProcess(results, detScale, threshold, imgWidth, imgHeight);
+    }
+
+    postProcess(results, scale, threshold, origWidth, origHeight) {
+      const scores = [];
+      const bboxes = [];
+      const kpss = [];
+
+      for (let strideIndex = 0; strideIndex < this.strides.length; strideIndex++) {
+        const stride = this.strides[strideIndex];
+        const scoreOutput = results[this.outputNames[strideIndex]];
+        const bboxOutput = results[this.outputNames[strideIndex + this.fmc]];
+        const kpsOutput = this.useKps ? results[this.outputNames[strideIndex + this.fmc * 2]] : null;
+
+        const height = Math.floor(this.inputSize[1] / stride);
+        const width = Math.floor(this.inputSize[0] / stride);
+
+        const cacheKey = `${width}_${height}_${stride}`;
+        if (!this.centerCache[cacheKey]) {
+          const anchors = [];
+          for (let i = 0; i < height; i++) {
+            for (let j = 0; j < width; j++) {
+              for (let k = 0; k < this.numAnchors; k++) {
+                const x = (j + 0.5) * stride;
+                const y = (i + 0.5) * stride;
+                anchors.push([x, y]);
+              }
+            }
+          }
+          this.centerCache[cacheKey] = anchors;
+        }
+
+        const anchors = this.centerCache[cacheKey];
+        const scoreData = scoreOutput.data;
+        const bboxData = bboxOutput.data;
+        const kpsData = kpsOutput ? kpsOutput.data : null;
+
+        for (let anchorIndex = 0; anchorIndex < anchors.length; anchorIndex++) {
+          const score = scoreData[anchorIndex];
+          if (score >= threshold) {
+            const anchor = anchors[anchorIndex];
+            const [x, y] = anchor;
+            
+            const x1 = (x - bboxData[anchorIndex * 4] * stride) / scale;
+            const y1 = (y - bboxData[anchorIndex * 4 + 1] * stride) / scale;
+            const x2 = (x + bboxData[anchorIndex * 4 + 2] * stride) / scale;
+            const y2 = (y + bboxData[anchorIndex * 4 + 3] * stride) / scale;
+
+            scores.push(score);
+            bboxes.push([x1, y1, x2, y2]);
+
+            if (this.useKps && kpsData) {
+              const kps = [];
+              for (let k = 0; k < 5; k++) {
+                const kpX = (x + kpsData[anchorIndex * 10 + k * 2] * stride) / scale;
+                const kpY = (y + kpsData[anchorIndex * 10 + k * 2 + 1] * stride) / scale;
+                kps.push([kpX, kpY]);
+              }
+              kpss.push(kps);
+            }
+          }
+        }
+      }
+
+      const selectedIndices = evaluateFunctions.nms(bboxes, scores, this.nmsThresh);
+      const finalResults = [];
+
+      for (const idx of selectedIndices) {
+        const bbox = bboxes[idx];
+        const clampedBbox = [
+          Math.max(0, Math.min(bbox[0], origWidth)),
+          Math.max(0, Math.min(bbox[1], origHeight)),
+          Math.max(0, Math.min(bbox[2], origWidth)),
+          Math.max(0, Math.min(bbox[3], origHeight))
+        ];
+
+        finalResults.push({
+          bbox: clampedBbox,
+          score: scores[idx],
+          kps: this.useKps ? kpss[idx] : []
+        });
+      }
+
+      return finalResults;
+    }
+  }
+
+  // Hàm cập nhật thống kê
+  function updateStats() {
+    const stats = document.getElementById('cameraStats');
+    if (stats) {
+      stats.innerHTML = `
+        <div>Best Score: ${cameraState.bestScore.toFixed(2)}</div>
+        <div>Faces Detected: ${cameraState.facesDetectedCount}</div>
+        <div>Processed: ${cameraState.processedFacesCount}</div>
+        <div>Blur Threshold: 50</div>
+      `;
+    }
+  }
+
+  // Hàm khởi tạo camera
+  async function cameraInitialize() {
+    try {
+      console.log("[Camera] Starting camera initialization...");
+      
+      // Load dependencies first
+      const dependencies = await initializeCameraModule();
+      const { ort, nms, distance2kps, distance2bbox, alignFace, calculateFaceQuality, varianceOfLaplacian } = dependencies;
+      
+      // Lưu ort vào global scope để FaceDetector có thể sử dụng
+      window.ortModule = ort;
+      
+      // Lưu các hàm evaluate vào biến toàn cục
+      evaluateFunctions = { nms, distance2kps, distance2bbox, alignFace, calculateFaceQuality, varianceOfLaplacian };
+      
+      debugLog("Dependencies loaded successfully");
+      
+      // Lấy các elements
+      const video = document.getElementById('cameraVideo');
+      const canvas = document.getElementById('cameraOutput');
+      const canvas2 = document.getElementById('cameraOutput2');
+      const bestFaceCanvas = document.getElementById('cameraBestFaceCanvas');
+      const captureBtn = document.getElementById('cameraCaptureBtn');
+      const downloadBtn = document.getElementById('cameraDownloadBtn');
+      const resetBtn = document.getElementById('cameraResetBtn');
+      const status = document.getElementById('cameraStatus');
+
+      if (!video || !canvas || !canvas2 || !bestFaceCanvas) {
+        throw new Error('Required camera elements not found in DOM');
+      }
+
+      const ctx = canvas.getContext('2d');
+      const ctx2 = canvas2.getContext('2d');
+      const bestFaceCtx = bestFaceCanvas.getContext('2d');
+
+      // Khởi tạo detector với ort từ dynamic import
+      try {
+        debugLog("Loading face detection model...");
+        cameraState.detector = await FaceDetector.create('model_1_kps.onnx', ort);
+        debugLog("Detector initialized successfully");
+        status.innerHTML = '<div style="color: #4CAF50;">Model loaded successfully!</div>';
+      } catch (e) {
+        console.error("Failed to initialize detector:", e);
+        debugLog("Failed to load model: " + e.message);
+        status.innerHTML = '<div style="color: red;">❌ Failed to load ONNX model. Check if model_1_kps.onnx exists.</div>';
+        throw new Error(`ONNX model loading failed: ${e.message}`);
+      }
+
+      // Hàm render chính
+      function render() {
+        if (!video.videoWidth || !video.videoHeight) {
+          cameraState.animationFrameId = requestAnimationFrame(render);
+          return;
+        }
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas2.width = video.videoWidth;
+        canvas2.height = video.videoHeight;
+
+        ctx.drawImage(video, 0, 0);
+        
+        // Canvas2: Vẽ video background với overlay detection
+        ctx2.drawImage(video, 0, 0);
+        
+        // Thiết lập style cho detection overlay
+        ctx2.globalCompositeOperation = 'source-over';
+        ctx2.globalAlpha = 1.0;
+
+        // Phát hiện khuôn mặt
+        cameraState.detector.detect(video, 0.5).then(faces => {
+          cameraState.facesDetectedCount += faces.length;
+
+          faces.forEach(face => {
+            const [x, y, x2, y2] = face.bbox;
+            const w = x2 - x;
+            const h = y2 - y;
+
+            // Vẽ bounding box
+            ctx2.strokeStyle = '#4CAF50';
+            ctx2.lineWidth = 2;
+            ctx2.strokeRect(x, y, w, h);
+
+            // Vẽ score
+            ctx2.fillStyle = '#4CAF50';
+            ctx2.font = '16px Arial';
+            ctx2.fillText(`${face.score.toFixed(2)}`, x, y - 5);
+
+            // Vẽ keypoints
+            if (face.kps && face.kps.length >= 5) {
+              ctx2.fillStyle = '#ff0000';
+              face.kps.forEach(kp => {
+                ctx2.beginPath();
+                ctx2.arc(kp[0], kp[1], 2, 0, 2 * Math.PI);
+                ctx2.fill();
+              });
+            }
+
+            // Xử lý khuôn mặt tốt nhất nếu đang capture
+            if (cameraState.isCapturing && face.kps.length >= 5) {
+              cameraState.processedFacesCount++;
+              
+              const sourceCanvas = document.createElement('canvas');
+              sourceCanvas.width = video.videoWidth;
+              sourceCanvas.height = video.videoHeight;
+              const sourceCtx = sourceCanvas.getContext('2d');
+              sourceCtx.drawImage(video, 0, 0);
+              
+              const faceBBox = { x1: x, y1: y, x2: x2, y2: y2 };
+              const alignedFaceCanvas = evaluateFunctions.alignFace(sourceCanvas, face.kps, faceBBox);
+              
+              if (alignedFaceCanvas) {
+                const faceImageData = alignedFaceCanvas.getContext('2d').getImageData(0, 0, alignedFaceCanvas.width, alignedFaceCanvas.height);
+                const blurScore = evaluateFunctions.varianceOfLaplacian(faceImageData, alignedFaceCanvas.width, alignedFaceCanvas.height);
+                
+                debugLog(`Processing face - Blur: ${blurScore.toFixed(0)}`);
+              
+                const qualityScore = evaluateFunctions.calculateFaceQuality(face.kps);
+                  
+                debugLog(`Quality score: ${qualityScore.toFixed(2)} vs Best: ${cameraState.bestScore.toFixed(2)}`);
+                  
+                if (blurScore > 50 && qualityScore > cameraState.bestScore) {
+                  cameraState.bestScore = qualityScore;
+                  cameraState.bestFaceData = alignedFaceCanvas.toDataURL('image/png');
+                  
+                  bestFaceCanvas.width = alignedFaceCanvas.width;
+                  bestFaceCanvas.height = alignedFaceCanvas.height;
+                  bestFaceCtx.drawImage(alignedFaceCanvas, 0, 0);
+                  bestFaceCanvas.style.display = 'block';
+                  downloadBtn.disabled = false;
+                  
+                  status.innerHTML = '<div style="color: #4CAF50;">✓ New best face captured!</div>';
+                  debugLog(`New best face! Score: ${cameraState.bestScore.toFixed(2)}`);
+                } else if (blurScore <= 50) {
+                  debugLog(`Face too blurry: ${blurScore.toFixed(0)} < 50`);
+                }
+              }
+            }
+          });
+          updateStats();
+        }).catch(e => {
+          console.error("Detection error:", e);
+          debugLog("Detection error: " + e.message);
+        });
+
+        cameraState.animationFrameId = requestAnimationFrame(render);
+      }
+
+      // Event listeners
+      captureBtn.addEventListener('click', async () => {
+        cameraState.isCapturing = !cameraState.isCapturing;
+        captureBtn.textContent = cameraState.isCapturing ? 'Stop Capturing' : 'Start Capturing Best Face';
+        captureBtn.style.background = cameraState.isCapturing ? '#f44336' : '#4CAF50';
+        
+        if (!cameraState.isCapturing) {
+          status.innerHTML = '<div>Status: Stopped capturing</div>';
+          debugLog("Stopped capturing");
+          
+          if (cameraState.bestFaceData) {
+            debugLog("Best face data available, sending to server");
+            captureBtn.disabled = true;
+            
+            try {
+              await sendBestFaceToServer(cameraState.bestFaceData);
+              debugLog("Successfully sent best face to server");
+            } catch (error) {
+              console.error("Failed to send to server:", error);
+            } finally {
+              captureBtn.disabled = false;
+            }
+          } else {
+            debugLog("No best face data to send");
+            status.innerHTML = '<div style="color: #ff9800;">No best face captured to send</div>';
+          }
+        } else {
+          status.innerHTML = '<div style="color: #4CAF50;">Capturing best face...</div>';
+          debugLog("Started capturing");
+        }
+      });
+
+      downloadBtn.addEventListener('click', () => {
+        if (cameraState.bestFaceData) {
+          const link = document.createElement('a');
+          link.download = `best_face_${new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19)}.png`;
+          link.href = cameraState.bestFaceData;
+          link.click();
+          debugLog("Downloaded best face");
+        }
+      });
+
+      resetBtn.addEventListener('click', () => {
+        cameraState.isCapturing = false;
+        cameraState.bestScore = 0;
+        cameraState.bestFaceData = null;
+        cameraState.facesDetectedCount = 0;
+        cameraState.processedFacesCount = 0;
+        
+        captureBtn.textContent = 'Start Capturing Best Face';
+        captureBtn.style.background = '#4CAF50';
+        downloadBtn.disabled = true;
+        bestFaceCanvas.style.display = 'none';
+        
+        const serverResult = document.getElementById('cameraServerResult');
+        if (serverResult) {
+          serverResult.textContent = '';
+        }
+        
+        status.innerHTML = '<div>Status: Reset completed</div>';
+        updateStats();
+        debugLog("Reset all data");
+      });
+
+      // Khởi động camera
+      try {
+        debugLog("Requesting camera access...");
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 640 },
+            height: { ideal: 480 }
+          } 
+        });
+        video.srcObject = stream;
+        
+        video.onloadedmetadata = () => {
+          debugLog("Camera loaded, starting detection...");
+          video.play();
+          render();
+          status.innerHTML = '<div style="color: #4CAF50;">Camera ready! Click "Start Capturing" to begin.</div>';
+        };
+      } catch (e) {
+        console.error('Camera error:', e);
+        debugLog("Camera error: " + e.message);
+        status.innerHTML = '<div style="color: red;">❌ Camera access denied. Please allow camera access and refresh.</div>';
+        throw new Error(`Camera access failed: ${e.message}`);
+      }
+
+      debugLog("Camera initialization completed successfully");
+      
+    } catch (error) {
+      console.error('Camera initialization failed:', error);
+      debugLog(`Initialization failed: ${error.message}`);
+      
+      const status = document.getElementById('cameraStatus');
+      if (status) {
+        status.innerHTML = `<div style="color: red;">❌ Initialization failed: ${error.message}</div>`;
+      }
+      
+      throw error;
+    }
+  }
+
+  // Test function for debugging
+  function cameraModuleTest() {
+    console.log('Camera module test:', {
+      cameraState,
+      elements: {
+        video: !!document.getElementById('cameraVideo'),
+        canvas: !!document.getElementById('cameraOutput'),
+        canvas2: !!document.getElementById('cameraOutput2'),
+        status: !!document.getElementById('cameraStatus')
+      }
+    });
+    return 'Camera module loaded successfully';
+  }
+
+  // Export functions cho base.html
+  window.cameraInitialize = cameraInitialize;
+  window.cameraModuleTest = cameraModuleTest;
+
+  // Auto-initialize khi page load
+  console.log("[Camera] Camera module script loaded, starting initialization...");
+  
+  // Đợi DOM ready rồi mới khởi tạo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        debugLog("DOM ready, starting auto-initialization...");
+        cameraInitialize().catch(error => {
+          console.error('[Camera] Auto-initialization failed:', error);
+          debugLog(`Auto-init failed: ${error.message}`);
+        });
+      }, 200);
+    });
+  } else {
+    // DOM đã sẵn sàng
+    setTimeout(() => {
+      debugLog("DOM already ready, starting auto-initialization...");
+      cameraInitialize().catch(error => {
+        console.error('[Camera] Auto-initialization failed:', error);
+        debugLog(`Auto-init failed: ${error.message}`);
+      });
+    }, 200);
+  }
+
+</script>

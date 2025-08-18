@@ -455,6 +455,11 @@
       
       <!-- Tab buttons moved to left side -->
       <div class="flex items-center gap-1 flex-1">
+        <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="loadPage('camera-stream', this)">
+          <i class="fa-solid fa-video w-5 text-center"></i> 
+          <span class="hidden md:inline">Live Camera</span> 
+          <span class="tab-indicator"></span>
+        </button>
         <button class="tab-btn flex items-center gap-2 px-4 py-3 text-sm font-semibold text-gray-600" onclick="loadPage('query', this)">
           <i class="fa-solid fa-magnifying-glass w-5 text-center"></i> 
           <span class="hidden md:inline">Detection</span> 
@@ -480,7 +485,7 @@
       <!-- Auth area on the right -->
       <div class="flex items-center gap-4 ml-auto">
         <div class="h-8 border-l border-gray-200"></div>
-        <button onclick="window.location.href='manage.html'" class="px-4 py-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-800 font-semibold text-sm flex items-center gap-2">
+        <button onclick="window.location.href='pages/manage.html'" class="px-4 py-2 rounded-lg bg-green-100 hover:bg-green-200 text-green-800 font-semibold text-sm flex items-center gap-2">
           <i class="fa-solid fa-cogs"></i> Manage
         </button>
         <div class="flex gap-2" id="authNavArea">
@@ -563,6 +568,54 @@
         // Update container with loaded content
         container.innerHTML = html;
         
+        // IMPORTANT: Execute scripts manually since innerHTML doesn't execute them
+        const scripts = container.querySelectorAll('script');
+        console.log(`Found ${scripts.length} scripts to execute`);
+        
+        scripts.forEach((script, index) => {
+          try {
+            console.log(`Executing script ${index + 1}/${scripts.length}`);
+            
+            if (script.src) {
+              // External script - create new script element
+              const newScript = document.createElement('script');
+              newScript.src = script.src;
+              document.head.appendChild(newScript);
+            } else {
+              // Inline script - execute content
+              const scriptContent = script.textContent || script.innerHTML;
+              if (scriptContent.trim()) {
+                console.log(`Executing inline script (${scriptContent.length} chars)`);
+                
+                // Create new script element and execute
+                const newScript = document.createElement('script');
+                newScript.textContent = scriptContent;
+                document.head.appendChild(newScript);
+                
+                console.log(`✅ Script ${index + 1} executed successfully`);
+                
+                // Remove it immediately to avoid conflicts
+                setTimeout(() => {
+                  if (newScript.parentNode) {
+                    newScript.parentNode.removeChild(newScript);
+                  }
+                }, 100);
+              }
+            }
+          } catch (error) {
+            console.error(`Error executing script ${index + 1}:`, error);
+          }
+        });
+        
+        // Check if camera functions are now available
+        setTimeout(() => {
+          console.log('🔍 Post-script execution check:', {
+            cameraInitialize: typeof window.cameraInitialize,
+            cameraModuleTest: typeof window.cameraModuleTest,
+            cameraState: typeof window.cameraState
+          });
+        }, 200);
+        
         // Add active class to loaded page
         const pageElement = container.querySelector('.page');
         if (pageElement) {
@@ -621,6 +674,9 @@
         setupDragAndDropForElement('predictDropArea', 'predictFile', 'predictFileName');
       } else if (pageId === 'add') {
         setupDragAndDropForElement('addDropArea', 'addFile', 'addFileName');
+      } else if (pageId === 'camera-stream') {
+        // Camera-stream page auto-initializes
+        console.log('Camera-stream page loaded - auto camera enabled');
       }
     }
 
@@ -739,6 +795,44 @@
       loadPage(pageId, btn);
     };
 
+    // Essential camera functions only
+    window.checkCameraAvailability = function() {
+      console.log('[CAMERA-CHECK] 🔍 Checking camera availability...');
+      
+      if (!navigator.mediaDevices) {
+        console.error('[CAMERA-CHECK] ❌ navigator.mediaDevices not supported');
+        return false;
+      }
+      
+      if (!navigator.mediaDevices.getUserMedia) {
+        console.error('[CAMERA-CHECK] ❌ getUserMedia not supported');
+        return false;
+      }
+      
+      // Check if we're on localhost or HTTPS
+      const isLocalhost = window.location.hostname === 'localhost' || 
+                         window.location.hostname === '127.0.0.1' ||
+                         window.location.hostname === '::1';
+                         
+      const isHTTPS = window.location.protocol === 'https:';
+      
+      console.log('[CAMERA-CHECK] Protocol check:', {
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
+        canUseCamera: isLocalhost || isHTTPS
+      });
+      
+      if (!isLocalhost && !isHTTPS) {
+        console.warn('[CAMERA-CHECK] ⚠️ Camera requires HTTPS or localhost');
+        return false;
+      }
+      
+      console.log('[CAMERA-CHECK] ✅ Camera should be available');
+      return true;
+    };
+
+    console.log('[GLOBAL] Essential camera functions loaded');
+
     // DOMContentLoaded event handler
     window.addEventListener('DOMContentLoaded', function () {
       console.log('DOM loaded, initializing dynamic page loader...');
@@ -820,7 +914,7 @@
       setTimeout(() => {
         const firstTab = document.querySelector('.tab-btn');
         if (firstTab) {
-          loadPage('query', firstTab);
+          loadPage('camera-stream', firstTab);
         }
       }, 100);
     });

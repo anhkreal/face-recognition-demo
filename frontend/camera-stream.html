@@ -1,0 +1,730 @@
+  <!--
+    Ứng dụng web nhận diện khuôn mặt thời gian thực sử dụng mô hình ONNX.
+    Giao diện gồm 3 cột: webcam, kết quả nhận diện, điều khiển và thông tin.
+  -->
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <!-- Đặt mã hóa ký tự và responsive cho thiết bị di động -->
+  <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Face Detection</title> <!-- Tiêu đề trang -->
+    <!--
+      CSS: Định dạng bố cục, màu sắc, style cho các thành phần giao diện
+    -->
+    <style>
+      body { 
+        margin: 0; 
+        background: #222; 
+        padding: 20px;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      #container {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+      }
+      video { 
+        display: none; 
+      }
+      canvas { 
+        border: 1px solid #444;
+      }
+      #controls {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        min-width: 200px;
+      }
+      button {
+        padding: 10px;
+        background: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      button:hover {
+        background: #45a049;
+      }
+      button:disabled {
+        background: #666;
+        cursor: not-allowed;
+      }
+      #status {
+        padding: 10px;
+        background: #333;
+        border-radius: 4px;
+        font-size: 12px;
+      }
+      #bestFaceCanvas {
+        max-width: 200px;
+        max-height: 200px;
+        border: 2px solid #4CAF50;
+        margin-top: 10px;
+      }
+      #stats {
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .debug-info {
+        margin-top: 10px;
+        padding: 5px;
+        background: #444;
+        border-radius: 4px;
+        font-size: 10px;
+      }
+    </style>
+  </head>
+  <body>
+  <!-- Tiêu đề chính của ứng dụng -->
+  <h2>Face Detection</h2>
+    
+    <!--
+      Bố cục 3 cột:
+      - Cột 1: Video webcam (ẩn) + canvas ảnh gốc
+      - Cột 2: Canvas kết quả nhận diện (bounding box, keypoints)
+      - Cột 3: Điều khiển, trạng thái, thống kê, debug
+    -->
+    <div id="container">
+  <!-- Cột 1: Hiển thị video webcam và ảnh gốc -->
+  <div>
+  <!-- Video webcam (ẩn, chỉ dùng lấy frame) -->
+  <video id="video" autoplay muted playsinline></video>
+  <!-- Canvas hiển thị ảnh gốc từ webcam -->
+  <canvas id="output"></canvas>
+  <div style="margin-top: 10px; font-size: 12px;">Live Detection</div>
+      </div>
+      
+  <!-- Cột 2: Hiển thị kết quả nhận diện (bounding box, keypoints) -->
+  <div>
+  <!-- Canvas vẽ bounding box, keypoints khuôn mặt -->
+  <canvas id="output2"></canvas>
+  <div style="margin-top: 10px; font-size: 12px;">Detection Results</div>
+      </div>
+      
+  <!-- Cột 3: Điều khiển, trạng thái, thống kê, debug -->
+  <div id="controls">
+  <!-- Nút bắt đầu/dừng chọn khuôn mặt tốt nhất -->
+  <button id="captureBtn">Start Capturing Best Face</button>
+  <!-- Nút tải về khuôn mặt tốt nhất -->
+  <button id="downloadBtn" disabled>Download Best Face</button>
+  <!-- Nút reset trạng thái -->
+  <button id="resetBtn">Reset</button>
+        
+  <!-- Hiển thị trạng thái và thống kê quá trình nhận diện -->
+  <div id="status">
+          <div>Status: Ready</div> <!-- Trạng thái hiện tại -->
+          <div id="stats">
+            <div>Best Score: 0</div> <!-- Điểm khuôn mặt tốt nhất -->
+            <div>Faces Detected: 0</div> <!-- Số khuôn mặt đã phát hiện -->
+            <div>Blur Threshold: 50</div> <!-- Ngưỡng độ nét -->
+          </div>
+        </div>
+        
+  <!-- Canvas hiển thị khuôn mặt tốt nhất đã chọn -->
+  <canvas id="bestFaceCanvas" style="display: none;"></canvas>
+  <!-- Kết quả trả về từ server (nếu có) -->
+  <div id="serverResult" style="white-space: pre-wrap; margin-top: 10px;"></div>
+        <!-- Thông tin debug quá trình xử lý -->
+        <div class="debug-info" id="debugInfo">
+          <div>Debug: Ready</div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      JavaScript: Xử lý logic chính của ứng dụng
+      - Khởi tạo mô hình ONNX, lấy webcam, phát hiện khuôn mặt, đánh giá chất lượng, lưu khuôn mặt tốt nhất, gửi lên server, tải về, reset, cập nhật giao diện
+    -->
+    <script type="module">
+  // Import thư viện onnxruntime-web và các hàm xử lý từ evaluate.js
+  import * as ort from "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/esm/ort.min.js";
+  import {nms,distance2kps,distance2bbox,alignFace, calculateFaceQuality,varianceOfLaplacian} from './evaluate.js'
+  // Cấu hình môi trường onnxruntime
+  ort.env.wasm.proxy = false;
+  ort.env.wasm.numThreads = 3;
+  ort.env.wasm.wasmPaths = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.18.0/dist/";
+
+  // Biến trạng thái toàn cục
+  let isCapturing = false; // Đang bật chế độ chọn khuôn mặt tốt nhất
+  let bestScore = 0; // Điểm khuôn mặt tốt nhất
+  let bestFaceData = null; // Ảnh khuôn mặt tốt nhất (dataURL)
+  let facesDetectedCount = 0; // Số khuôn mặt đã phát hiện
+  let processedFacesCount = 0; // Số khuôn mặt đã xử lý
+
+      // Ghi log debug ra giao diện
+      function debugLog(message) {
+        console.log(message);
+        const debugInfo = document.getElementById('debugInfo');
+        if (debugInfo) {
+          debugInfo.innerHTML = `<div>Debug: ${message}</div>`;
+        }
+      }
+  // Hàm gửi ảnh khuôn mặt tốt nhất lên server (xem chi tiết trong evaluate.js)
+  async function sendBestFaceToServer(faceDataUrl) {
+    const serverUrl = 'https://agegender.onrender.com/predict';
+    
+    try {
+      debugLog("Preparing to send best face to server...");
+      const status = document.getElementById('status');
+      status.innerHTML = '<div style="color: #ff9800;">📤 Sending best face to server...</div>';
+
+      if (!faceDataUrl) {
+        throw new Error('No face data URL provided');
+      }
+      if (!faceDataUrl.startsWith('data:image/')) {
+        throw new Error('Invalid data URL format');
+      }
+      
+      debugLog(`Data URL length: ${faceDataUrl.length}`);
+      debugLog(`Data URL prefix: ${faceDataUrl.substring(0, 50)}...`);
+      
+      const response = await fetch(faceDataUrl);
+      const blob = await response.blob();
+      
+      debugLog(`Blob size: ${blob.size} bytes, type: ${blob.type}`);
+      
+      if (blob.size === 0) {
+        throw new Error('Generated blob is empty');
+      }
+      if (blob.size > 10 * 1024 * 1024) { 
+        throw new Error('Image too large (>10MB)');
+      }
+      
+      const formData = new FormData();
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const filename = `best_face_${timestamp}.png`;
+      
+      formData.append('image', blob, filename);
+      formData.append('score', bestScore.toFixed(2));
+      formData.append('timestamp', timestamp);
+      formData.append('processed_faces', processedFacesCount.toString());
+      
+      debugLog(`FormData entries:`);
+      for (let [key, value] of formData.entries()) {
+        if (key === 'image') {
+          debugLog(`  ${key}: [File] ${value.name}, size: ${value.size}, type: ${value.type}`);
+        } else {
+          debugLog(`  ${key}: ${value}`);
+        }
+      }
+      
+      debugLog(`Sending ${filename} to ${serverUrl}...`);
+
+      try {
+        const pingResponse = await fetch(serverUrl.replace('/predict', '/'), { 
+          method: 'GET',
+          mode: 'no-cors' 
+        });
+        debugLog('Server ping successful');
+      } catch (pingError) {
+        debugLog(`Server ping failed: ${pingError.message}`);
+      }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); 
+      
+      const serverResponse = await fetch(serverUrl, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+        headers: {
+          // 'Accept': 'application/json',
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      debugLog(`Response status: ${serverResponse.status}`);
+      debugLog(`Response statusText: ${serverResponse.statusText}`);
+      debugLog(`Response headers:`);
+      for (let [key, value] of serverResponse.headers.entries()) {
+        debugLog(`  ${key}: ${value}`);
+      }
+      
+      if (serverResponse.ok) {
+        const result = await serverResponse.text();
+        debugLog("Server response: " + result);
+        const resultDiv = document.getElementById('serverResult');
+        if (resultDiv) {
+          resultDiv.textContent = result; 
+        }
+        status.innerHTML = '<div style="color: #4CAF50;">Best face sent successfully to server!</div>';
+        return { success: true, response: result };
+      } else {
+        let errorDetails = '';
+        try {
+          errorDetails = await serverResponse.text();
+          debugLog(`Server error details: ${errorDetails}`);
+        } catch (readError) {
+          debugLog(`Could not read error response: ${readError.message}`);
+        }
+        throw new Error(`Server responded with status: ${serverResponse.status} ${serverResponse.statusText}. Details: ${errorDetails}`);
+      }
+      
+    } catch (error) {
+      console.error('Failed to send best face to server:', error);
+      debugLog("Failed to send to server: " + error.message);
+      
+      let errorMessage = error.message;
+      if (error.name === 'AbortError') {
+        errorMessage = 'Request timeout (30s)';
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Network error - cannot reach server';
+      }
+      
+      const status = document.getElementById('status');
+      status.innerHTML = '<div style="color: red;">Failed to send to server: ' + errorMessage + '</div>';
+      return { success: false, error: errorMessage };
+    }
+  }
+
+  // Lớp FaceDetector: bọc mô hình ONNX, phát hiện khuôn mặt, keypoints
+  class FaceDetector {
+        constructor(session) {
+          this.session = session;
+          this.nmsThresh = 0.4;
+          this.centerCache = {};
+          const outputs = session.outputNames;
+          const F = outputs.length;
+          
+          if (F === 6 || F === 9) {
+            this.fmc = 3;
+            this.strides = [8, 16, 32];
+            this.useKps = F === 9;
+            this.numAnchors = 2;
+          } else {
+            this.fmc = 5;
+            this.strides = [8, 16, 32, 64, 128];
+            this.useKps = F === 15;
+            this.numAnchors = 1;
+          }
+          
+          this.inputName = session.inputNames[0];
+          this.outputNames = session.outputNames;
+          this.inputSize = [640, 640];
+        }
+
+        static async create(modelUrl) {
+          try {
+            const sess = await ort.InferenceSession.create(modelUrl, {
+              executionProviders: ['wasm'],
+            });
+            return new FaceDetector(sess);
+          } catch (e) {
+            console.error("Failed to create session:", e);
+            throw e;
+          }
+        }
+        async detect(source, threshold = 0.5) {
+          if (source.videoWidth === 0 || source.videoHeight === 0) {
+            return [];
+          }
+
+          const imgHeight = source.videoHeight;
+          const imgWidth = source.videoWidth;
+          const [inputWidth, inputHeight] = this.inputSize;
+          
+          const imRatio = imgHeight / imgWidth;
+          const modelRatio = inputHeight / inputWidth;
+          
+          let newHeight, newWidth, detScale;
+          if (imRatio > modelRatio) {
+            newHeight = inputHeight;
+            newWidth = Math.round(newHeight / imRatio);
+          } else {
+            newWidth = inputWidth;
+            newHeight = Math.round(newWidth * imRatio);
+          }
+          detScale = newHeight / imgHeight;
+
+          const detCanvas = document.createElement('canvas');
+          detCanvas.width = inputWidth;
+          detCanvas.height = inputHeight;
+          const detCtx = detCanvas.getContext('2d');
+          
+          detCtx.fillStyle = 'black';
+          detCtx.fillRect(0, 0, inputWidth, inputHeight);
+          detCtx.drawImage(source, 0, 0, newWidth, newHeight);
+
+          const imageData = detCtx.getImageData(0, 0, inputWidth, inputHeight);
+          const data = imageData.data;
+          const floatData = new Float32Array(inputWidth * inputHeight * 3);
+          
+          for (let y = 0; y < inputHeight; y++) {
+            for (let x = 0; x < inputWidth; x++) {
+              const idx = (y * inputWidth + x) * 4;
+              const outIdx = y * inputWidth + x;
+              
+              floatData[outIdx] = (data[idx + 2] - 127.5) / 128;
+              floatData[outIdx + inputWidth * inputHeight] = (data[idx + 1] - 127.5) / 128;
+              floatData[outIdx + inputWidth * inputHeight * 2] = (data[idx] - 127.5) / 128;
+            }
+          }
+
+          const tensor = new ort.Tensor('float32', floatData, [1, 3, inputHeight, inputWidth]);
+          const outputs = await this.session.run({ [this.inputName]: tensor });
+
+          const scoresList = [];
+          const bboxesList = [];
+          const kpsList = [];
+
+          for (let idx = 0; idx < this.strides.length; idx++) {
+            const stride = this.strides[idx];
+            const scores = outputs[this.outputNames[idx]].data;
+            const bboxPred = outputs[this.outputNames[idx + this.fmc]].data;
+            const kpsPred = this.useKps ? outputs[this.outputNames[idx + 2 * this.fmc]].data : null;
+
+            const scaledBboxPred = Array.from(bboxPred).map(x => x * stride);
+            const scaledKpsPred = kpsPred ? Array.from(kpsPred).map(x => x * stride) : null;
+
+            const height = Math.floor(inputHeight / stride);
+            const width = Math.floor(inputWidth / stride);
+            const key = `${height},${width},${stride}`;
+            
+            let anchorCenters;
+            if (this.centerCache[key]) {
+              anchorCenters = this.centerCache[key];
+            } else {
+              const centers = [];
+              for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                  centers.push([x * stride, y * stride]);
+                }
+              }
+              
+              if (this.numAnchors > 1) {
+                anchorCenters = centers.flatMap(c => Array(this.numAnchors).fill(c));
+              } else {
+                anchorCenters = centers;
+              }
+              this.centerCache[key] = anchorCenters;
+            }
+
+            const posIndices = [];
+            for (let i = 0; i < scores.length; i++) {
+              if (scores[i] >= threshold) {
+                posIndices.push(i);
+              }
+            }
+
+            if (posIndices.length > 0) {
+              const bboxes = distance2bbox(anchorCenters, scaledBboxPred, [inputHeight, inputWidth]);
+              const posScores = posIndices.map(i => scores[i]);
+              const posBboxes = posIndices.map(i => bboxes[i]);
+              
+              scoresList.push(posScores);
+              bboxesList.push(posBboxes);
+              
+              if (this.useKps && scaledKpsPred) {
+                const kpss = distance2kps(anchorCenters, scaledKpsPred, [inputHeight, inputWidth]);
+                const posKpss = posIndices.map(i => kpss[i]);
+                kpsList.push(posKpss);
+              }
+            }
+          }
+
+          const allScores = scoresList.flat();
+          const allBboxes = bboxesList.flat();
+          const allKpss = this.useKps ? kpsList.flat() : [];
+
+          if (allScores.length === 0) {
+            return [];
+          }
+
+          const dets = allBboxes.map((bbox, i) => [...bbox, allScores[i]]);
+          const keepIndices = nms(dets, this.nmsThresh);
+
+          const faces = keepIndices.map(i => {
+            const det = dets[i];
+            return {
+              bbox: [
+                (det[0]) / detScale,
+                (det[1]) / detScale,
+                (det[2] - det[0]) / detScale,
+                (det[3] - det[1]) / detScale
+              ],
+              score: det[4],
+              kps: this.useKps && allKpss[i] ? allKpss[i].map(([kx, ky]) => [
+                kx / detScale,
+                ky / detScale
+              ]) : []
+            };
+          });
+
+          return faces;
+        }
+      }
+
+  // Khi trang web load xong, khởi tạo mọi thứ
+  window.addEventListener('DOMContentLoaded', async () => {
+        const video = document.getElementById('video');
+        const canvas1 = document.getElementById('output');
+        const ctx1 = canvas1.getContext('2d');
+        const canvas2 = document.getElementById('output2');
+        const ctx2 = canvas2.getContext('2d');
+        const bestFaceCanvas = document.getElementById('bestFaceCanvas');
+        const bestFaceCtx = bestFaceCanvas.getContext('2d');
+
+        const captureBtn = document.getElementById('captureBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const status = document.getElementById('status');
+        const stats = document.getElementById('stats');
+
+        // Khởi tạo mô hình nhận diện khuôn mặt (ONNX)
+        let detector;
+        try {
+          debugLog("Loading face detection model...");
+          detector = await FaceDetector.create('model_1_kps.onnx');
+          debugLog("Detector initialized successfully");
+          status.innerHTML = '<div style="color: #4CAF50;">Model loaded successfully!</div>';
+        } catch (e) {
+          // Nếu không tải được mô hình, dùng chế độ demo (random)
+          console.error("Failed to initialize detector:", e);
+          debugLog("Failed to load model: " + e.message);
+          status.innerHTML = '<div style="color: red;">Failed to load model - using demo mode</div>';
+          
+          detector = {
+            detect: async () => {
+              if (Math.random() > 0.8) {
+                return [{
+                  bbox: [100, 100, 150, 180],
+                  score: 0.95,
+                  kps: [
+                    [140, 130], 
+                    [190, 130],
+                    [165, 150], 
+                    [155, 180],
+                    [175, 180]  
+                  ]
+                }];
+              }
+              return [];
+            }
+          };
+        }
+  // Xử lý khi bấm nút Start/Stop Capturing
+  captureBtn.addEventListener('click', async () => {
+          isCapturing = !isCapturing;
+          captureBtn.textContent = isCapturing ? 'Stop Capturing' : 'Start Capturing Best Face';
+          captureBtn.style.background = isCapturing ? '#f44336' : '#4CAF50';
+          
+          if (!isCapturing) {
+            status.innerHTML = '<div>Status: Stopped capturing</div>';
+            debugLog("Stopped capturing");
+            console.log("[captureBtn] Sending best face because capturing stopped.");
+            if (bestFaceData) {
+              debugLog("Best face data available, sending to server");
+              captureBtn.disabled = true;
+              captureBtn.textContent = 'Sending';
+              
+              try {
+                const result = await sendBestFaceToServer(bestFaceData);
+                
+                if (result.success) {
+                  debugLog("Successfully sent best face to server");
+                } else {
+                  debugLog("Failed to send best face to server: " + result.error);
+                }
+              } catch (error) {
+                debugLog("Unexpected error: " + error.message);
+              } finally {
+                captureBtn.disabled = false;
+                captureBtn.textContent = 'Start Capturing Best Face';
+              }
+              
+            } else {
+              debugLog("No best face data to send");
+              status.innerHTML = '<div style="color: #orange;">No best face captured to send to server</div>';
+            }
+            
+          } else {
+            bestScore = 0;
+            bestFaceData = null;
+            facesDetectedCount = 0;
+            processedFacesCount = 0;
+            downloadBtn.disabled = true;
+            bestFaceCanvas.style.display = 'none';
+            status.innerHTML = '<div>Status: Capturing best face...</div>';
+            debugLog("Started capturing");
+            console.log("[captureBtn] Reset best face data and stats, capturing started.");
+          }
+          updateStats();
+        });
+
+  // Xử lý khi bấm nút Download Best Face
+  downloadBtn.addEventListener('click', () => {
+          debugLog(`Download button clicked - bestFaceData exists: ${!!bestFaceData}`);
+          
+          if (bestFaceData) {
+            try {
+              if (!bestFaceData.startsWith('data:image/png;base64,')) {
+                throw new Error('Invalid data URL format');
+              }
+
+              debugLog("Creating download link...");
+              const link = document.createElement('a');
+              const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+              link.download = `best_face_${timestamp}.png`;
+              link.href = bestFaceData;
+              
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              
+              debugLog("Download completed successfully");
+              status.innerHTML = '<div style="color: #4CAF50;">Best face downloaded successfully!</div>';
+            } catch (e) {
+              console.error('Download error:', e);
+              debugLog("Download failed: " + e.message);
+              status.innerHTML = '<div style="color: red;">Error: Failed to download - ' + e.message + '</div>';
+            }
+          } else {
+            debugLog("No best face data available");
+            status.innerHTML = '<div style="color: red;">Error: No best face captured yet. Start capturing first!</div>';
+          }
+        });
+
+  // Xử lý khi bấm nút Reset
+  resetBtn.addEventListener('click', () => {
+          debugLog("Reset button clicked");
+          isCapturing = false;
+          bestScore = 0;
+          bestFaceData = null;
+          facesDetectedCount = 0;
+          processedFacesCount = 0;
+          captureBtn.textContent = 'Start Capturing Best Face';
+          captureBtn.style.background = '#4CAF50';
+          downloadBtn.disabled = true;
+          bestFaceCanvas.style.display = 'none';
+          status.innerHTML = '<div>Status: Reset complete</div>';
+          updateStats();
+        });
+
+  // Cập nhật thống kê lên giao diện
+  function updateStats() {
+          stats.innerHTML = `
+            <div>Best Score: ${bestScore.toFixed(2)}</div>
+            <div>Faces Detected: ${facesDetectedCount}</div>
+            <div>Processed: ${processedFacesCount}</div>
+          `;
+        }
+
+  // Vòng lặp chính: lấy frame từ webcam, phát hiện khuôn mặt, vẽ kết quả, đánh giá chất lượng, lưu best face
+  async function render() {
+          if (video.readyState === 4 && video.videoWidth > 0 && video.videoHeight > 0) {
+            canvas1.width = video.videoWidth;
+            canvas1.height = video.videoHeight;
+            canvas2.width = video.videoWidth;
+            canvas2.height = video.videoHeight;
+
+            ctx1.drawImage(video, 0, 0);
+            ctx2.drawImage(video, 0, 0);
+
+            try {
+              const faces = await detector.detect(video, 0.5);
+              
+              if (faces.length > 0) {
+                facesDetectedCount++;
+              }
+              
+              ctx2.lineWidth = 2;
+              ctx2.strokeStyle = 'lime';
+              ctx2.fillStyle = 'red';
+              ctx2.font = '16px Arial';
+              
+              for (let face of faces) {
+                const [x, y, w, h] = face.bbox;
+                
+                ctx2.strokeRect(x, y, w, h);
+                ctx2.fillText(`${face.score.toFixed(2)}`, x, y - 10);
+                
+                face.kps.forEach(([kx, ky]) => {
+                  ctx2.beginPath();
+                  ctx2.arc(kx, ky, 3, 0, 2 * Math.PI);
+                  ctx2.fill();
+                });
+
+                if (isCapturing && face.kps.length >= 5) {
+                  processedFacesCount++;
+                  
+                  const sourceCanvas = document.createElement('canvas');
+                  sourceCanvas.width = video.videoWidth;
+                  sourceCanvas.height = video.videoHeight;
+                  const sourceCtx = sourceCanvas.getContext('2d');
+                  sourceCtx.drawImage(video, 0, 0);
+                  
+                  const faceBBox = {
+                    x1: x,
+                    y1: y,
+                    x2: x + w,
+                    y2: y + h
+                  };
+                  
+                  const alignedFaceCanvas = alignFace(sourceCanvas, face.kps, faceBBox);
+                  
+                  if (alignedFaceCanvas) {
+                    const faceImageData = alignedFaceCanvas.getContext('2d').getImageData(0, 0, alignedFaceCanvas.width, alignedFaceCanvas.height);
+                    const blurScore = varianceOfLaplacian(faceImageData, alignedFaceCanvas.width, alignedFaceCanvas.height);
+                    
+                    debugLog(`Processing face - Blur: ${blurScore.toFixed(0)}`);
+                  
+                    const qualityScore = calculateFaceQuality(face.kps);
+                      
+                    debugLog(`Quality score: ${qualityScore.toFixed(2)} vs Best: ${bestScore.toFixed(2)}`);
+                      
+                    if (blurScore > 50 && qualityScore > bestScore) {
+                      bestScore = qualityScore;
+                      bestFaceData = alignedFaceCanvas.toDataURL('image/png');
+                      
+                      bestFaceCanvas.width = alignedFaceCanvas.width;
+                      bestFaceCanvas.height = alignedFaceCanvas.height;
+                      bestFaceCtx.drawImage(alignedFaceCanvas, 0, 0);
+                      bestFaceCanvas.style.display = 'block';
+                      downloadBtn.disabled = false;
+                      
+                      status.innerHTML = '<div style="color: #4CAF50;">✓ New best face captured!</div>';
+                      debugLog(`New best face! Score: ${bestScore.toFixed(2)}`);
+                    } else if (blurScore <= 50) {
+                      debugLog(`Face too blurry: ${blurScore.toFixed(0)} < 50`);
+                    }
+                  }
+                }
+              }
+              updateStats();
+            } catch (e) {
+              console.error("Detection error:", e);
+              debugLog("Detection error: " + e.message);
+            }
+          }
+          requestAnimationFrame(render);
+        }
+
+  // Xin quyền truy cập webcam, khởi động render
+  try {
+          debugLog("Requesting camera access...");
+          const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+              width: { ideal: 640 },
+              height: { ideal: 480 }
+            } 
+          });
+          video.srcObject = stream;
+          video.onloadedmetadata = () => {
+            debugLog("Camera loaded, starting detection...");
+            video.play();
+            render();
+            status.innerHTML = '<div style="color: #4CAF50;">Camera ready! Click "Start Capturing" to begin.</div>';
+          };
+        } catch (e) {
+          console.error('Camera error:', e);
+          debugLog("Camera error: " + e.message);
+          status.innerHTML = '<div style="color: red;">Camera access denied. Please allow camera access and refresh.</div>';
+        }
+      });
+    </script>
+  </body>
+  </html>
+

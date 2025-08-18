@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="stylesheet" href="assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/main.css">
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -446,7 +446,7 @@
       <!-- Auth area on the right -->
       <div class="flex items-center gap-4 ml-auto">
         <div class="h-8 border-l border-gray-200"></div>
-        <button onclick="window.location.href='base.html'" class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-sm flex items-center gap-2">
+        <button onclick="window.location.href='../base.html'" class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold text-sm flex items-center gap-2">
           <i class="fa-solid fa-arrow-left"></i> Quay lại
         </button>
         <div class="flex gap-2" id="authNavArea">
@@ -920,7 +920,7 @@
               localStorage.removeItem('authToken');
               
               // Redirect to base page
-              window.location.href = 'base.html';
+              window.location.href = '../base.html';
             }
           };
 
@@ -954,25 +954,25 @@
 
   <!-- JavaScript Modules -->
   <!-- Core Configuration -->
-  <script src="assets/js/config/api-config.js"></script>
+  <script src="../assets/js/config/api-config.js"></script>
   
   <!-- Utilities -->
-  <script src="assets/js/utils/validation.js"></script>
-  <script src="assets/js/utils/api-utils.js"></script>
-  <script src="assets/js/utils/ui-utils.js"></script>
+  <script src="../assets/js/utils/validation.js"></script>
+  <script src="../assets/js/utils/api-utils.js"></script>
+  <script src="../assets/js/utils/ui-utils.js"></script>
   
   <!-- Components -->
-  <script src="assets/js/components/snackbar.js"></script>
-  <script src="assets/js/components/modal.js"></script>
-  <script src="assets/js/components/navigation.js"></script>
+  <script src="../assets/js/components/snackbar.js"></script>
+  <script src="../assets/js/components/modal.js"></script>
+  <script src="../assets/js/components/navigation.js"></script>
   
   <!-- Pages -->
-  <script src="assets/js/pages/add.js"></script>
-  <script src="assets/js/pages/edit.js"></script>
-  <script src="assets/js/pages/delete.js"></script>
-  <script src="assets/js/pages/reset.js"></script>
+  <script src="../assets/js/pages/add.js"></script>
+  <script src="../assets/js/pages/edit.js"></script>
+  <script src="../assets/js/pages/delete.js"></script>
+  <script src="../assets/js/pages/reset.js"></script>
   
   <!-- Main Application -->
-  <script src="assets/js/app.js"></script>
+  <script src="../assets/js/app.js"></script>
 </body>
 </html>
