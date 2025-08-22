@@ -1,0 +1,45 @@
+# Railway Dockerfile cho Face Recognition API
+FROM python:3.10-slim
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PORT=8000
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    wget \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set work directory
+WORKDIR /app
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy source code (excluding large files)
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p logs uploads model index
+
+# Download model files (if URLs are configured)
+RUN python download_models.py || echo "Model download failed, using empty index"
+
+# Expose port
+EXPOSE $PORT
+
+# Run the application
+CMD uvicorn app:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300

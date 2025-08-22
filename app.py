@@ -17,6 +17,7 @@ from api.search_embeddings import embedding_search_router
 from api.health import health_router
 from api.predict import predict_router
 from api.add_embedding_simple import simple_add_router
+from api.anti_spoofing import anti_spoofing_router
 # Optional performance monitoring
 try:
     from api.performance import performance_router
@@ -95,7 +96,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Security Headers Middleware
+# Add routers
+app.include_router(mysql_auth_router, tags=["🔐 Authentication"])
+app.include_router(face_query_router, tags=["👤 Nhận Diện Khuôn Mặt"])
+app.include_router(anti_spoofing_router, tags=["🛡️ Chống Giả Mạo"])
+app.include_router(face_query_top5_router, tags=["👥 Top 5 Tương Tự"])
+app.include_router(simple_add_router, tags=["➕ Thêm Người Đơn Giản"])
+app.include_router(add_router, tags=["➕ Quản Lý Người"])
+app.include_router(edit_embedding_router, tags=["✏️ Chỉnh Sửa"])
+app.include_router(delete_class_router, tags=["❌ Xóa Người"])
+app.include_router(delete_image_router, tags=["🗑️ Xóa Ảnh"])
+app.include_router(vector_info_router, tags=["📊 Thông Tin Database"])
+app.include_router(get_image_ids_by_class_router, tags=["🖼️ Danh Sách Ảnh"])
+app.include_router(list_nguoi_router, tags=["📋 Danh Sách Người"])
+app.include_router(embedding_search_router, tags=["🔍 Tìm Kiếm Nâng Cao"])
+app.include_router(status_router, tags=["💡 Trạng Thái"])
+app.include_router(reset_router, tags=["🔄 Reset Database"])
+app.include_router(predict_router, tags=["🤖 Dự Đoán"])
+app.include_router(health_router, tags=["❤️ Sức Khỏe"])
+
+if PERFORMANCE_AVAILABLE:
+    app.include_router(performance_router, prefix="/metrics", tags=["📈 Hiệu Suất"])
+
+# Security Headers Middleware 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     start_time = time.time()
@@ -146,33 +169,16 @@ async def performance_monitoring(request: Request, call_next):
     return response
 
 # 🔐 MySQL Authentication APIs
-app.include_router(mysql_auth_router)
+# mysql_auth_router already included above with prefix="/auth"
 
 print("🚀 Khởi tạo Face Recognition System thành công!")
 print("🔐 MySQL Authentication system đã được tích hợp!")
 print("📊 Security middleware và logging đã được kích hoạt!")
 
-# 🏠 Public APIs (không cần authentication)
-app.include_router(face_query_router, tags=["🔍 Tìm Kiếm Khuôn Mặt"])
-app.include_router(face_query_top5_router, tags=["🔍 Tìm Kiếm Khuôn Mặt"])
-app.include_router(vector_info_router, tags=["📊 Thông Tin Hệ Thống"])
-app.include_router(get_image_ids_by_class_router, tags=["📊 Thông Tin Hệ Thống"])
-app.include_router(status_router, tags=["📊 Thông Tin Hệ Thống"])
-app.include_router(list_nguoi_router, tags=["👥 Danh Sách Người"])
-app.include_router(embedding_search_router, tags=["🔍 Tìm Kiếm Khuôn Mặt"])
-app.include_router(health_router, tags=["🏥 Kiểm Tra Sức Khỏe"])
-app.include_router(predict_router, tags=["🔮 Dự Đoán Tuổi/Giới Tính"])
-app.include_router(simple_add_router, tags=["🚀 Thêm Đơn Giản (Public)"])
-# Optional: Performance monitoring if available
-if PERFORMANCE_AVAILABLE:
-    app.include_router(performance_router, tags=["⚡ Hiệu Suất"])
-
-# 🔒 Protected APIs (cần MySQL authentication)
-app.include_router(add_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
-app.include_router(edit_embedding_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
-app.include_router(delete_class_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
-app.include_router(delete_image_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
-app.include_router(reset_router, tags=["🔒 Quản Lý Dữ Liệu (Protected)"])
+# All routers already included above - removed duplicates to fix OpenAPI schema conflicts
+# 🏠 Public APIs: face_query_router, face_query_top5_router, anti_spoofing_router, etc.
+# 🔒 Protected APIs: add_router, edit_embedding_router, delete_class_router, etc.
+# � System APIs: health_router, status_router, vector_info_router, etc.
 
 @app.get("/", tags=["🏠 Trang Chủ"])
 def read_root():

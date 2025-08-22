@@ -10,10 +10,10 @@ if (window.location.hostname === 'localhost') {
   apiHost = 'http://localhost:8000';
 } else if (window.location.hostname === '172.16.8.184') {
   // Network: backend on port 8000, frontend on different port
-  apiHost = 'http://172.16.8.184:8000';
+  apiHost = 'http://127.0.0.1:8000';
 } else {
   // Default fallback
-  apiHost = 'http://172.16.8.184:8000';
+  apiHost = 'http://127.0.0.1:8000';
 }
 
 // Export configuration

@@ -5,6 +5,7 @@ import cv2
 import time
 from service.face_query_service import query_face_service as face_query_service
 from service.add_embedding_simple_service import simple_add_embedding_service
+from service.anti_spoofing_service import spoof_detection_service
 
 router = APIRouter()
 
@@ -45,14 +46,30 @@ async def query_face(
     """
     🔍 Nhận diện khuôn mặt với tính năng auto-add
     
-    1. Tìm kiếm trong database trước
-    2. Nếu không tìm thấy (score < threshold), tự động thêm mới
-    3. Trả về kết quả tương ứng
+    1. Kiểm tra ảnh giả mạo
+    2. Nếu là ảnh thật, tiến hành tìm kiếm
+    3. Nếu không tìm thấy, tự động thêm mới
+    4. Trả về kết quả tương ứng
     """
-    # Bước 1: Thực hiện query face bình thường
+    # Bước 1: Kiểm tra chống giả mạo
+    await image.seek(0)
+    spoof_check = await spoof_detection_service.check_spoof(image)
+    
+    if not spoof_check["is_real"]:
+        return JSONResponse(
+            content={
+                "action": "spoof_detected"
+            },
+            status_code=spoof_check.get("status_code", 400)
+        )
+
+    # Reset file pointer để đọc lại ảnh
+    await image.seek(0)
+    
+    # Bước 2: Thực hiện query face bình thường
     result = await face_query_service(image)
     
-    # Bước 2: Kiểm tra kết quả
+    # Bước 3: Kiểm tra kết quả
     if result and not result.get("error"):
         # Có kết quả tìm thấy - chỉ trả về thông tin cơ bản
         basic_result = {

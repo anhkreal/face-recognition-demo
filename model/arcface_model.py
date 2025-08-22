@@ -1,15 +1,16 @@
 import torch
 import numpy as np
 import cv2
-from albumentations.pytorch import ToTensorV2
-import albumentations as A
+# from albumentations.pytorch import ToTensorV2  # Temporarily disabled
+# import albumentations as A  # Temporarily disabled
+import torchvision.transforms as transforms
 import sys
 # sys.path.append('/home/intern1/lab/face_recognition/casia-webface/insightface/recognition/arcface_torch')
 sys.path.append('C:/Users/DELL/Downloads/archive/face_api/insightface/recognition/arcface_torch')
 from backbones import get_model
 
 class ArcFaceFeatureExtractor:
-    def __init__(self, model_path='ms1mv3_arcface_r18_fp16.pth', model_version='r18', device=None, img_size=112):
+    def __init__(self, model_path='model/ms1mv3_arcface_r18_fp16.pth', model_version='r18', device=None, img_size=112):
         self.model_path = model_path
         self.model_version = model_version
         self.img_size = img_size
@@ -20,10 +21,12 @@ class ArcFaceFeatureExtractor:
         else:
             self.device = device
         self.model = self._load_model()
-        self.val_aug = A.Compose([
-            A.Resize(self.img_size, self.img_size),
-            A.Normalize(mean=(0.5,0.5,0.5), std=(0.5,0.5,0.5)),
-            ToTensorV2()
+        # Use torchvision transforms instead of albumentations
+        self.val_aug = transforms.Compose([
+            transforms.ToPILImage(),
+            transforms.Resize((self.img_size, self.img_size)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
         ])
 
     def _load_model(self):
@@ -41,9 +44,12 @@ class ArcFaceFeatureExtractor:
         if img is None or len(img.shape) != 3 or img.shape[2] != 3:
             img = np.zeros((self.img_size, self.img_size, 3), dtype=np.uint8)
         else:
-            img = cv2.resize(img, (self.img_size, self.img_size))
-        img = self.val_aug(image=img)['image'].unsqueeze(0).to(self.device)
-        emb = self.model(img).cpu().numpy()[0]
+            # Convert BGR to RGB for PIL transforms
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            
+        # Apply transforms (note: different from albumentations)
+        img_tensor = self.val_aug(img).unsqueeze(0).to(self.device)
+        emb = self.model(img_tensor).cpu().numpy()[0]
         return emb
 
 # Example usage:

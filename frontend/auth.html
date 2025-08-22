@@ -196,10 +196,10 @@
         if (window.API_CONFIG && window.API_CONFIG.host) {
           apiHost = window.API_CONFIG.host;
         } else {
-          if (window.location.hostname === 'localhost' || window.location.hostname === '172.16.8.184') {
+          if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             apiHost = window.location.origin;
           } else {
-            apiHost = 'http://172.16.8.184:8000';
+            apiHost = 'http://127.0.0.1:8000';
           }
         }
         

@@ -1,0 +1,31 @@
+
+# Large files for Railway deployment
+# These will be handled separately
+
+# Model files (>50MB)
+model/*.pth
+model/*.onnx
+model/*.safetensors
+model/*.bin
+
+# FAISS index files
+index/*.index
+index/*.npz
+index/*.faiss
+
+# Backup directories
+index/abc/
+model/backup/
+
+# Large datasets
+data/
+datasets/
+images/
+*.zip
+*.tar.gz
+*.7z
+
+# Temporary large files
+temp/
+tmp/
+cache/
